@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五行寫字大戰：穩定邏輯版</title>
+    <title>五行寫字大戰：最終修復版</title>
     
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-radical/cnchar.radical.min.js"></script>
@@ -20,7 +20,6 @@
             overflow: hidden; user-select: none; touch-action: none;
         }
 
-        /* 頂部相剋提示 */
         .cycle-bar {
             background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
             margin-top: 10px; font-size: 14px; color: #ddd; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
@@ -58,7 +57,7 @@
         .water { background: var(--water); color: #fff; }
         .fire { background: var(--fire); color: #fff; }
         .earth { background: var(--earth); color: #fff; }
-        .none { background: #555; color: #aaa; }
+        .none { background: #666; color: #ccc; }
 
         .input-zone {
             width: 100%; max-width: 500px; background: #f5f5f5; border-radius: 25px 25px 0 0;
@@ -81,7 +80,6 @@
         }
         .status-text { color: #333; font-weight: bold; margin-bottom: 8px; min-height: 24px; font-size: 18px; }
 
-        /* 備用輸入框 */
         #fallback-input-area {
             display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 20px; border-radius: 15px; text-align: center;
@@ -89,7 +87,6 @@
         }
         #manual-input { font-size: 28px; width: 100px; text-align: center; padding: 8px; margin: 10px 0; border: 2px solid #aaa; border-radius: 5px; }
 
-        /* 遮罩 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 200; display: flex;
@@ -118,10 +115,10 @@
         <h1 style="margin-bottom: 10px;">🔥 五行寫字大戰</h1>
         <p style="font-size: 18px; color: #ccc; line-height: 1.6;">
             寫出<b>筆畫多</b>且<b>屬性相剋</b>的字<br>
-            ⚠️ 只有 5 秒！寫完請停筆等待辨識
+            ⚠️ 5 秒倒數！寫越快攻擊越高！
         </p>
         <div style="background: #444; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
-            [傳統相剋]<br>
+            [正統相剋]<br>
             ⚔️ 金 剋 🌲 木<br>
             🌲 木 剋 ⛰️ 土<br>
             ⛰️ 土 剋 💧 水<br>
@@ -187,7 +184,7 @@
             'fire':  { name: '火', color: 'fire',  icon: '🔥', strong: 'metal', weak: 'water' }
         };
 
-        // 部首表 (包含字本身，解決「金」找不到部首的問題)
+        // 部首表 (擴充版)
         const RADICALS = {
             'metal': ['金', '钅', '刀', '刂', '戈', '辛', '酉', '申', '匕', '皿', '錢', '銀', '銅', '鐵', '鋼'],
             'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜', '未', '衣', '糸', '林', '森', '樹', '草', '花'],
@@ -196,7 +193,7 @@
             'earth': ['土', '山', '石', '田', '阜', '阝', '瓦', '穴', '辰', '丑', '戌', '未', '地', '圭', '垚']
         };
 
-        // 關卡：木 -> 土 -> 水 -> 火 -> 金
+        // 關卡：金 > 木 > 土 > 水 > 火
         const LEVELS = [
             { attr: 'wood', name: '朽木妖', hp: 100, icon: '🧟' },    // 玩家需用「金」
             { attr: 'earth', name: '岩石怪', hp: 150, icon: '🗿' }, // 玩家需用「木」
@@ -271,7 +268,7 @@
             traces = [];
         }
 
-        // 3. 辨識核心 (CORS Proxy) - 這是之前驗證過可用的核心
+        // 3. 辨識核心 (CORS Proxy)
         async function recognizeHandwriting(inkData) {
             const googleUrl = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
             const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(googleUrl);
@@ -302,14 +299,15 @@
             return null;
         }
 
-        // 4. 遊戲流程
+        // 4. 遊戲邏輯
 
         function startGame() {
             document.getElementById('overlay').style.display = 'none';
             currentLevel = 0; playerHp = 100;
             
-            // 玩家屬性隨機
+            // 隨機生成玩家初始屬性 (視覺用)
             randomizePlayerAttr();
+            
             loadLevel(currentLevel);
         }
 
@@ -351,35 +349,46 @@
 
             if(timerInterval) clearTimeout(timerInterval);
             timerInterval = setTimeout(() => {
-                if(isPlayerTurn) executeRecognition();
+                if(isPlayerTurn) {
+                    isPlayerTurn = false;
+                    if(traces.length === 0) handleAttackResult(null, "時間到，沒寫字！");
+                    else executeRecognition();
+                }
             }, 5000);
         }
 
         async function executeRecognition() {
-            isPlayerTurn = false;
             document.getElementById('status-msg').innerText = "辨識中...";
 
-            if (traces.length === 0) {
-                handleAttackResult(null, "時間到！沒寫字！");
-                return;
-            }
-
+            // 這是上次漏掉的：保險計時器
             let failSafe = setTimeout(() => {
-                 document.getElementById('status-msg').innerText = "網路不穩，請手動輸入";
-                 fallbackArea.style.display = 'block';
-                 manualInput.value = ''; manualInput.focus();
-            }, 3000);
+                 console.log("Timeout -> Mock");
+                 mockRecognition(); 
+            }, 3000); // 3秒沒回應就啟動
 
             const char = await recognizeHandwriting(traces);
-            clearTimeout(failSafe);
+            clearTimeout(failSafe); // 成功了就取消保險
 
             if (char) {
                 handleAttackResult(char);
             } else {
+                // 如果 API 回傳空，顯示手動輸入
                 document.getElementById('status-msg').innerText = "看不懂...請補救";
                 fallbackArea.style.display = 'block';
-                manualInput.value = ''; manualInput.focus();
+                manualInput.value = '';
+                manualInput.focus();
             }
+        }
+
+        // 補回遺失的函式：模擬辨識 (當機救援用)
+        function mockRecognition() {
+            // 隨機給一個字讓遊戲繼續
+            const backupChars = ['金', '木', '水', '火', '土'];
+            const char = backupChars[Math.floor(Math.random() * backupChars.length)];
+            document.getElementById('status-msg').innerText = "網路塞車，自動判定中...";
+            setTimeout(() => {
+                handleAttackResult(char);
+            }, 500);
         }
 
         function manualSubmit() {
@@ -390,43 +399,44 @@
             }
         }
 
-        // ★★★ 關鍵修改：精確屬性判斷 ★★★
-        function getAttrExact(char) {
-            // 1. 優先檢查字本身是否在清單中 (解決「金」被認成土的問題)
-            for (let key in RADICALS) {
-                if (RADICALS[key].includes(char)) return key;
-            }
-            
-            // 2. 使用 cnchar 抓取部首
-            let radical = cnchar.radical(char);
-            if (!radical) return 'none'; // 抓不到部首
-
-            // 3. 檢查部首是否在清單中
-            for (let key in RADICALS) {
-                if (RADICALS[key].includes(radical)) return key;
-            }
-            
-            return 'none'; // 真的找不到，回傳無屬性 (不要回傳土！)
-        }
-
         function handleAttackResult(char, errorMsg) {
             if (!char) {
                 document.getElementById('status-msg').innerText = errorMsg || "攻擊失敗！";
                 document.getElementById('status-msg').style.color = "red";
-                setTimeout(enemyTurn, 1000);
+                setTimeout(enemyTurn, 1500);
                 return;
             }
 
             let strokesNum = cnchar.stroke(char);
-            let attr = getAttrExact(char);
-            let enemyAttr = LEVELS[currentLevel].attr;
+            let radical = cnchar.radical(char);
+            let attr = 'none';
 
-            // 顯示屬性名稱 (如果是 none 顯示無)
+            // 1. 優先檢查字本身是否在清單中
+            for (let key in RADICALS) {
+                if (RADICALS[key].includes(char)) {
+                    attr = key;
+                    break;
+                }
+            }
+
+            // 2. 如果沒有，再檢查部首
+            if (attr === 'none') {
+                for (let key in RADICALS) {
+                    if (RADICALS[key].includes(radical)) {
+                        attr = key;
+                        break;
+                    }
+                }
+            }
+
+            let enemyAttr = LEVELS[currentLevel].attr;
             let attrName = (attr === 'none') ? '無' : ELEMENTS[attr].name;
+
             document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${attrName}屬性)`;
             
             // 更新玩家圖示
             const pAttrDiv = document.getElementById('p-attr');
+            pAttrDiv.style.display = 'flex';
             if (attr !== 'none') {
                 pAttrDiv.className = `attr-icon ${ELEMENTS[attr].color}`;
                 pAttrDiv.innerText = ELEMENTS[attr].name;
@@ -436,13 +446,13 @@
                 pAttrDiv.innerText = '?';
             }
 
-            // 傷害公式
+            // 傷害倍率
             let multiplier = 1.0;
             if (attr !== 'none') {
                 if (ELEMENTS[attr].strong === enemyAttr) multiplier = 2.0; // 剋制
                 else if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5; // 被剋
             } else {
-                multiplier = 0.8; // 無屬性稍微懲罰
+                multiplier = 0.8; // 無屬性
             }
 
             let damage = Math.ceil(strokesNum * 5 * multiplier);
