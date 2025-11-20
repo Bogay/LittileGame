@@ -3,152 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>背包數學大師：異形挑戰完整版</title>
+    <title>背包數學大師：乾淨版</title>
     <style>
-        /* 定義全域變數，方便調整高度 */
-        :root {
-            --header-height: 60px;
-            --feedback-height: 30px;
-        }
-        
-        /* 網頁基本設定：鎖定全螢幕，禁止滑動 */
+        :root { --header-height: 60px; --feedback-height: 30px; }
         html, body {
-            width: 100%;
-            height: 100%; 
-            height: 100dvh; /* 支援 iOS 動態高度 */
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #fff8e1; /* 溫暖的米黃色背景 */
-            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            touch-action: none; /* 關閉預設觸控行為 */
-            position: fixed;
-            display: flex;
-            flex-direction: column;
+            width: 100%; height: 100%; height: 100dvh; margin: 0; padding: 0; overflow: hidden;
+            background-color: #fff8e1; font-family: 'Segoe UI', sans-serif; touch-action: none;
+            position: fixed; display: flex; flex-direction: column;
         }
-        
-        /* 1. 頂部儀表板樣式 */
         .dashboard {
-            flex: 0 0 var(--header-height);
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 0 10px;
-            box-sizing: border-box;
-            border-bottom: 3px solid #ffb74d;
-            z-index: 10;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 0 0 var(--header-height); width: 100%; display: flex; justify-content: space-between;
+            align-items: center; background: white; padding: 0 10px; box-sizing: border-box;
+            border-bottom: 3px solid #ffb74d; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        
-        /* 2. 下方狀態回饋條 */
         #math-feedback {
-            flex: 0 0 var(--feedback-height);
-            font-size: 15px;
-            color: #5d4037;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff8e1;
-            width: 100%;
-            white-space: nowrap;
-            overflow: hidden;
+            flex: 0 0 var(--feedback-height); font-size: 15px; color: #5d4037; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; background: #fff8e1; width: 100%;
         }
-
-        /* 3. 遊戲主畫面容器 (自動填滿剩餘空間) */
         .game-container {
-            flex: 1; 
-            width: 100%;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            padding: 5px;
-            box-sizing: border-box;
+            flex: 1; width: 100%; position: relative; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; padding: 5px; box-sizing: border-box;
         }
-
-        canvas {
-            border-radius: 12px;
-            background: #eceff1; /* 畫布背景色 */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        /* UI 元件：進度與邊長 */
-        .stat-group { 
-            display: flex; 
-            gap: 8px; 
-            align-items: center; 
-            font-size: 14px; 
-            font-weight: bold; 
-            color: #5d4037;
-        }
-        
-        .unit-badge { 
-            background: #e1f5fe; 
-            color: #0277bd; 
-            padding: 4px 8px; 
-            border-radius: 6px; 
-            border: 1px solid #0277bd; 
-            white-space: nowrap;
-        }
-        
-        /* 操作提示標籤 (呼吸燈動畫) */
+        canvas { border-radius: 12px; background: #ffffff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .stat-group { display: flex; gap: 8px; align-items: center; font-size: 14px; font-weight: bold; color: #5d4037; }
+        .unit-badge { background: #e1f5fe; color: #0277bd; padding: 4px 8px; border-radius: 6px; border: 1px solid #0277bd; }
         .instruction-tag {
-            background: #fff3e0;
-            color: #ef6c00;
-            border: 2px dashed #ffb74d;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
+            background: #fff3e0; color: #ef6c00; border: 2px dashed #ffb74d; padding: 5px 10px;
+            border-radius: 20px; font-weight: bold; font-size: 15px; display: flex; align-items: center;
             animation: pulse 2s infinite;
         }
-        
-        /* 按鈕樣式 */
         button { 
-            padding: 8px 14px; 
-            font-size: 14px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            color: white; 
-            box-shadow: 0 2px 0 rgba(0,0,0,0.2); 
-            white-space: nowrap;
+            padding: 8px 14px; font-size: 14px; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: bold; color: white; box-shadow: 0 2px 0 rgba(0,0,0,0.2); white-space: nowrap;
         }
         button:active { transform: translateY(2px); box-shadow: none; }
         #btn-new { background-color: #66bb6a; }
-
-        /* 動畫定義 */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* 數學題目彈窗樣式 */
+        @keyframes pulse { 0% {transform:scale(1);} 50% {transform:scale(1.05);} 100% {transform:scale(1);} }
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); display: none;
-            justify-content: center; align-items: center; z-index: 100;
-            backdrop-filter: blur(2px);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(2px);
         }
         .modal-box {
-            background: white; padding: 20px; border-radius: 15px;
-            text-align: center; width: 320px; border: 4px solid #ffb74d;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: white; padding: 20px; border-radius: 15px; text-align: center; width: 320px;
+            border: 4px solid #ffb74d; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
         .modal-title { font-size: 22px; color: #d81b60; margin-bottom: 10px; font-weight: bold; }
         .modal-question { font-size: 18px; color: #333; margin-bottom: 15px; line-height: 1.6; }
         .modal-input { font-size: 24px; padding: 5px; width: 100px; text-align: center; border: 2px solid #ccc; border-radius: 8px; margin-bottom: 15px; }
         .modal-btn { padding: 10px 24px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; color: white; background: #1e88e5; }
-
     </style>
 </head>
 <body>
@@ -158,12 +60,8 @@
             <div class="unit-badge">📏 邊長: <span id="unit-len">1</span></div>
             <div><span id="coverage" style="color:#d81b60">0%</span></div>
         </div>
-
         <div class="instruction-tag">👆 點兩下旋轉</div>
-
-        <div>
-            <button id="btn-new">🔄 重來</button>
-        </div>
+        <div><button id="btn-new">🔄 重來</button></div>
     </div>
 
     <div id="math-feedback">拖曳積木填滿背包 | 答對面積可獲得三次機會</div>
@@ -183,7 +81,6 @@
     </div>
 
     <script>
-        // --- 1. 全域變數與設定 ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const uiCoverage = document.getElementById('coverage');
@@ -195,301 +92,126 @@
         const quizInput = document.getElementById('quiz-input');
         const quizSubmit = document.getElementById('btn-quiz-submit');
 
-        // 遊戲網格設定
         const COLS_BACKPACK = 10; 
         const ROWS_BACKPACK = 8;
         const COLS_GAP = 1;
-        const COLS_SPAWN = 4; // 物品生成區寬度
+        const COLS_SPAWN = 4;
         
         const TOTAL_LOGICAL_COLS = COLS_BACKPACK + COLS_GAP + COLS_SPAWN;
         const TOTAL_LOGICAL_ROWS = ROWS_BACKPACK;
 
-        // 畫面尺寸 (由 RWD 計算)
         let GRID_SIZE = 40;
         let OFFSET_X = 0;
         let OFFSET_Y = 0;
         let BACKPACK_W, BACKPACK_H;
 
-        // 數學邏輯
-        let UNIT_LENGTH = 1;
-        const POSSIBLE_LENGTHS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-        let unlockStatus = {}; // 記錄物品解鎖狀態
+        let UNIT_LENGTH = 2;
+        const POSSIBLE_LENGTHS = [2, 3, 4, 5, 6, 7, 8, 9, 10]; // 邊長範圍 2~10
+        let unlockStatus = {};
 
-        // 互動狀態
         let items = [];
         let draggedItem = null;
         let dragOffsetGridX = 0;
         let dragOffsetGridY = 0;
-        let lastClickTime = 0; // 用於判定雙擊
-        let pendingItem = null; // 等待回答問題的物品
+        let lastClickTime = 0;
+        let pendingItem = null;
         let pendingCol = 0, pendingRow = 0;
         let originalPos = {x:0, y:0};
 
-        // --- 2. 定義積木形狀 (SHAPES) ---
-        // 這裡新增了你要求的 5 格與 6 格複雜形狀
         const SHAPES = [
-            // --- 基礎 (4格) ---
-            [[1,1,1,1]],            // I4 長條
-            [[1,1],[1,1]],          // O4 正方
-            [[1,1,1],[1,0,0]],      // L4
-            [[1,1,1],[0,1,0]],      // T4
-            [[1,1,0],[0,1,1]],      // S4
-            
-            // --- 進階 (5格) ---
-            [[1,1,1,1,1]],          // I5 長條
-            [[1,1,1],[1,0,1]],      // U5 (凹型)
-            [[1,1],[1,1],[1,0]],    // P5
-            [[1,1,1],[0,1,0],[0,1,0]], // T5 (大T)
-            [[1,1,1],[1,0,0],[1,0,0]], // L5 (大L)
-            
-            // --- 困難 (6格) - 你的需求 ---
-            [[1,1,1],[1,1,1]],              // Rect6 (大矩形 2x3)
-            [[1,1],[1,0],[1,0],[1,1]],      // U6 (ㄇ字型/大C)
-            [[1,1,1],[0,1,0],[0,1,0],[0,1,0]], // T6 (長T)
-            [[1,1,1,1],[1,0,0,0],[1,0,0,0]]    // L6 (巨型L)
+            [[1]], [[1,1]], [[1,1,1]], 
+            [[1,1,1,1]], [[1,1],[1,1]], [[1,1,1],[1,0,0]], [[1,1,1],[0,1,0]], [[1,1,0],[0,1,1]],
+            [[1,1,1,1,1]], [[1,1,1],[1,0,1]], [[1,1],[1,1],[1,0]], [[1,1,1],[0,1,0],[0,1,0]], [[1,1,1],[1,0,0],[1,0,0]],
+            [[1,1,1],[1,1,1]], [[1,1],[1,0],[1,0],[1,1]], [[1,1,1],[0,1,0],[0,1,0],[0,1,0]], [[1,1,1,1],[1,0,0,0],[1,0,0,0]]
         ];
 
-        // --- 3. 物品類別 (Item Class) ---
         class Item {
             constructor(shape, key) {
-                this.shape = shape;
-                this.key = key;
-                this.template = ITEM_TEMPLATES[key];
-                this.color = this.template.color;
-                this.logicalX = 0; 
-                this.logicalY = 0;
-                this.isInside = false;
-                this.updateDimensions();
+                this.shape = shape; this.key = key;
+                this.template = ITEM_TEMPLATES[key]; this.color = this.template.color;
+                this.logicalX = 0; this.logicalY = 0;
+                this.isInside = false; this.updateDimensions();
             }
-
-            // 計算尺寸與面積
             updateDimensions() {
-                this.rows = this.shape.length;
-                this.cols = this.shape[0].length;
-                this.area = 0;
-                this.shape.flat().forEach(v => this.area += v);
+                this.rows = this.shape.length; this.cols = this.shape[0].length;
+                this.area = 0; this.shape.flat().forEach(v => this.area += v);
             }
-
-            // 旋轉邏輯 (矩陣旋轉)
             rotate() {
                 let newShape = new Array(this.cols).fill(0).map(() => new Array(this.rows).fill(0));
-                for(let r=0; r<this.rows; r++) {
-                    for(let c=0; c<this.cols; c++) {
-                        newShape[c][this.rows-1-r] = this.shape[r][c];
-                    }
-                }
-                this.shape = newShape;
-                this.updateDimensions();
+                for(let r=0; r<this.rows; r++) for(let c=0; c<this.cols; c++) newShape[c][this.rows-1-r] = this.shape[r][c];
+                this.shape = newShape; this.updateDimensions();
             }
-
-            // 繪製邏輯
             draw(ctx) {
                 const px = OFFSET_X + this.logicalX * GRID_SIZE;
                 const py = OFFSET_Y + this.logicalY * GRID_SIZE;
-                
-                if(this.template.draw) {
-                    this.template.draw(ctx, px, py, this);
-                }
-                
-                // 鎖頭圖示 (如果未解鎖且不在背包內)
+                if(this.template.draw) this.template.draw(ctx, px, py, this);
                 if(unlockStatus[this.key] <= 0 && !this.isInside && draggedItem !== this) {
-                    ctx.fillStyle = "rgba(0,0,0,0.4)";
-                    ctx.font = `${GRID_SIZE/2}px Arial`;
-                    ctx.textAlign = "center";
-                    ctx.fillText("🔒", px + GRID_SIZE/2, py + GRID_SIZE/2 + 5);
+                    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.font = `${GRID_SIZE/2}px Arial`;
+                    ctx.textAlign = "center"; ctx.fillText("🔒", px + GRID_SIZE/2, py + GRID_SIZE/2 + 5);
                 }
             }
-
-            // 點擊檢測
             hitTest(mx, my) {
                 const px = OFFSET_X + this.logicalX * GRID_SIZE;
                 const py = OFFSET_Y + this.logicalY * GRID_SIZE;
-                
                 if(mx < px || mx > px + this.cols*GRID_SIZE || my < py || my > py + this.rows*GRID_SIZE) return false;
-                
                 let c = Math.floor((mx - px) / GRID_SIZE);
                 let r = Math.floor((my - py) / GRID_SIZE);
-                
-                if(r >= 0 && r < this.rows && c >= 0 && c < this.cols) {
-                    return this.shape[r][c] === 1;
-                }
-                return false;
+                return (r >= 0 && r < this.rows && c >= 0 && c < this.cols && this.shape[r][c] === 1);
             }
         }
 
-        // --- 4. 繪圖輔助函式 ---
-        
-        // 畫基礎方塊
         function drawBase(ctx, x, y, color, size) { 
-            ctx.fillStyle = color; 
-            ctx.fillRect(x, y, size, size); 
-            
-            // 立體感高光與邊框
-            ctx.fillStyle = "rgba(255,255,255,0.3)"; 
-            ctx.fillRect(x, y, size, size * 0.2); 
-            ctx.strokeStyle = "rgba(0,0,0,0.1)"; 
-            ctx.strokeRect(x, y, size, size);
+            ctx.fillStyle = color; ctx.fillRect(x, y, size, size); 
+            ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.fillRect(x, y, size, size * 0.2); 
+            ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.strokeRect(x, y, size, size);
         }
-
-        // 遍歷形狀的輔助函式
         function iter(item, px, py, callback) {
-            for(let r=0; r<item.rows; r++) {
-                for(let c=0; c<item.cols; c++) {
-                    if(item.shape[r][c]) {
-                        callback(px + c * GRID_SIZE, py + r * GRID_SIZE, r, c);
-                    }
-                }
-            }
+            for(let r=0; r<item.rows; r++) for(let c=0; c<item.cols; c++) if(item.shape[r][c]) callback(px + c * GRID_SIZE, py + r * GRID_SIZE, r, c);
         }
 
-        // --- 5. 物品外觀定義 (Templates) ---
         const ITEM_TEMPLATES = {
-            'ruler': { 
-                color: '#fdd835', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.strokeStyle="#5d4037"; ctx.beginPath(); 
-                        ctx.moveTo(x+GRID_SIZE/2, y); ctx.lineTo(x+GRID_SIZE/2, y+GRID_SIZE/2); 
-                        ctx.stroke(); 
-                    }); 
-                }
-            },
-            'book': { 
-                color: '#42a5f5', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.fillStyle="rgba(255,255,255,0.4)"; 
-                        ctx.fillRect(x+3, y, 3, GRID_SIZE); 
-                    }); 
-                }
-            },
-            'notebook': { 
-                color: '#66bb6a', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y, r) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        if(r===0){ 
-                            ctx.fillStyle="#333"; ctx.beginPath(); 
-                            ctx.arc(x+GRID_SIZE/2, y+4, 2, 0, 6.28); ctx.fill();
-                        } 
-                    }); 
-                }
-            },
-            'pencil_box': { 
-                color: '#ef5350', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.fillStyle="rgba(0,0,0,0.2)"; 
-                        ctx.fillRect(x, y+GRID_SIZE/2-2, GRID_SIZE, 4); 
-                    }); 
-                }
-            },
-            'eraser': { 
-                color: '#eceff1', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        ctx.fillStyle="#fff"; ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE); 
-                        ctx.fillStyle="#1976d2"; ctx.fillRect(x+2, y+GRID_SIZE/2, GRID_SIZE-4, GRID_SIZE/2-2); 
-                        ctx.strokeStyle="#ccc"; ctx.strokeRect(x, y, GRID_SIZE, GRID_SIZE); 
-                    }); 
-                }
-            },
-            'headphones': { 
-                color: '#ab47bc', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.fillStyle="rgba(0,0,0,0.4)"; 
-                        ctx.font=`${GRID_SIZE/2}px Arial`; ctx.textAlign="center"; 
-                        ctx.fillText("🎧", x+GRID_SIZE/2, y+GRID_SIZE*0.7); 
-                    }); 
-                }
-            },
-            'gameboy': { 
-                color: '#26c6da', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.fillStyle="#004d40"; ctx.fillRect(x+4, y+4, GRID_SIZE-8, GRID_SIZE*0.4); 
-                        ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(x+GRID_SIZE*0.8, y+GRID_SIZE*0.8, 3, 0, 6.28); ctx.fill(); 
-                    }); 
-                }
-            },
-            'tetris': { 
-                color: '#ff7043', 
-                draw: (ctx, px, py, it) => { 
-                    iter(it, px, py, (x, y) => { 
-                        drawBase(ctx, x, y, it.color, GRID_SIZE); 
-                        ctx.strokeStyle="white"; ctx.strokeRect(x+4, y+4, GRID_SIZE-8, GRID_SIZE-8); 
-                    }); 
-                }
-            }
+            'ruler': { color: '#fdd835', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.strokeStyle="#5d4037"; ctx.beginPath(); ctx.moveTo(x+GRID_SIZE/2, y); ctx.lineTo(x+GRID_SIZE/2, y+GRID_SIZE/2); ctx.stroke(); }); } },
+            'book': { color: '#42a5f5', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.fillStyle="rgba(255,255,255,0.4)"; ctx.fillRect(x+3, y, 3, GRID_SIZE); }); } },
+            'notebook': { color: '#66bb6a', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y, r) => { drawBase(ctx, x, y, it.color, GRID_SIZE); if(r===0){ ctx.fillStyle="#333"; ctx.beginPath(); ctx.arc(x+GRID_SIZE/2, y+4, 2, 0, 6.28); ctx.fill();} }); } },
+            'pencil_box': { color: '#ef5350', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.fillStyle="rgba(0,0,0,0.2)"; ctx.fillRect(x, y+GRID_SIZE/2-2, GRID_SIZE, 4); }); } },
+            'eraser': { color: '#f48fb1', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.fillStyle="white"; ctx.font=`${GRID_SIZE/3}px Arial`; ctx.textAlign="center"; ctx.fillText("E", x+GRID_SIZE/2, y+GRID_SIZE/2+3); }); } },
+            'headphones': { color: '#ab47bc', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.fillStyle="rgba(0,0,0,0.4)"; ctx.font=`${GRID_SIZE/2}px Arial`; ctx.textAlign="center"; ctx.fillText("🎧", x+GRID_SIZE/2, y+GRID_SIZE*0.7); }); } },
+            'gameboy': { color: '#26c6da', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.fillStyle="#004d40"; ctx.fillRect(x+4, y+4, GRID_SIZE-8, GRID_SIZE*0.4); ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(x+GRID_SIZE*0.8, y+GRID_SIZE*0.8, 3, 0, 6.28); ctx.fill(); }); } },
+            'tetris': { color: '#ff7043', draw: (ctx, px, py, it) => { iter(it, px, py, (x, y) => { drawBase(ctx, x, y, it.color, GRID_SIZE); ctx.strokeStyle="white"; ctx.strokeRect(x+4, y+4, GRID_SIZE-8, GRID_SIZE-8); }); } }
         };
 
-        // --- 6. RWD 自適應視窗功能 ---
         function resizeGame() {
             const container = document.querySelector('.game-container');
-            const cW = container.clientWidth;
-            const cH = container.clientHeight;
-            
-            const padding = 10;
-            const safeW = cW - padding * 2;
-            const safeH = cH - padding * 2;
-
-            const sW = safeW / TOTAL_LOGICAL_COLS;
-            const sH = safeH / TOTAL_LOGICAL_ROWS;
-            
+            const cW = container.clientWidth; const cH = container.clientHeight;
+            const sW = (cW - 20) / TOTAL_LOGICAL_COLS; const sH = (cH - 20) / TOTAL_LOGICAL_ROWS;
             GRID_SIZE = Math.floor(Math.min(sW, sH));
-            
-            canvas.width = cW;
-            canvas.height = cH;
-
-            const contentW = TOTAL_LOGICAL_COLS * GRID_SIZE;
-            const contentH = TOTAL_LOGICAL_ROWS * GRID_SIZE;
-            
-            OFFSET_X = Math.floor((cW - contentW) / 2);
-            OFFSET_Y = Math.floor((cH - contentH) / 2);
-
-            BACKPACK_W = COLS_BACKPACK * GRID_SIZE;
-            BACKPACK_H = ROWS_BACKPACK * GRID_SIZE;
-            
+            canvas.width = cW; canvas.height = cH;
+            const contentW = TOTAL_LOGICAL_COLS * GRID_SIZE; const contentH = TOTAL_LOGICAL_ROWS * GRID_SIZE;
+            OFFSET_X = Math.floor((cW - contentW) / 2); OFFSET_Y = Math.floor((cH - contentH) / 2);
+            BACKPACK_W = COLS_BACKPACK * GRID_SIZE; BACKPACK_H = ROWS_BACKPACK * GRID_SIZE;
             draw();
         }
 
-        // --- 7. 遊戲核心初始化邏輯 ---
         function initGame() {
-            // 設定隨機邊長
             UNIT_LENGTH = POSSIBLE_LENGTHS[Math.floor(Math.random() * POSSIBLE_LENGTHS.length)];
             uiUnitLen.innerText = UNIT_LENGTH;
-            
-            // 重置狀態
-            unlockStatus = {}; 
-            Object.keys(ITEM_TEMPLATES).forEach(k => unlockStatus[k] = 0);
+            unlockStatus = {}; Object.keys(ITEM_TEMPLATES).forEach(k => unlockStatus[k] = 0);
             
             items = [];
             let grid = Array(ROWS_BACKPACK).fill().map(() => Array(COLS_BACKPACK).fill(0));
             
-            // 嘗試填滿網格 (生成謎題)
             for(let r=0; r<ROWS_BACKPACK; r++) {
                 for(let c=0; c<COLS_BACKPACK; c++) {
-                    if(!grid[r][c]) {
-                        tryPlace(grid, r, c);
-                    }
+                    if(!grid[r][c]) tryPlace(grid, r, c);
                 }
             }
             
-            // 將生成的物品散佈到等待區
             let spawnCol = COLS_BACKPACK + COLS_GAP;
             items.forEach(it => {
                 it.logicalX = spawnCol + Math.random() * (COLS_SPAWN - it.cols);
                 it.logicalY = Math.random() * (ROWS_BACKPACK - it.rows);
-                
                 let rot = Math.floor(Math.random() * 4);
                 for(let i=0; i<rot; i++) it.rotate();
-                
                 if(it.logicalX + it.cols > TOTAL_LOGICAL_COLS) it.logicalX = TOTAL_LOGICAL_COLS - it.cols;
                 if(it.logicalY + it.rows > TOTAL_LOGICAL_ROWS) it.logicalY = TOTAL_LOGICAL_ROWS - it.rows;
             });
@@ -497,12 +219,15 @@
         }
         
         function tryPlace(grid, r, c) {
-            // 打亂形狀嘗試順序
-            let shapes = [...SHAPES].sort(() => Math.random() - 0.5);
+            let shapes = [...SHAPES].sort((a, b) => {
+                let areaA = a.flat().reduce((acc, v) => acc + v, 0);
+                let areaB = b.flat().reduce((acc, v) => acc + v, 0);
+                return areaB - areaA || Math.random() - 0.5;
+            });
             
             for(let s of shapes) {
                 if(canFit(grid, r, c, s)) {
-                    let key = getKey(s); // 根據形狀特徵決定外觀
+                    let key = getKey(s);
                     let it = new Item(s, key);
                     items.push(it);
                     mark(grid, r, c, s, 1);
@@ -513,256 +238,115 @@
         
         function canFit(g, r, c, s) {
             if(r + s.length > ROWS_BACKPACK || c + s[0].length > COLS_BACKPACK) return false;
-            for(let i=0; i<s.length; i++) {
-                for(let j=0; j<s[0].length; j++) {
-                    if(s[i][j] && g[r+i][c+j]) return false;
-                }
-            }
+            for(let i=0; i<s.length; i++) for(let j=0; j<s[0].length; j++) if(s[i][j] && g[r+i][c+j]) return false;
             return true;
         }
-        
         function mark(g, r, c, s, v) { 
-            for(let i=0; i<s.length; i++) {
-                for(let j=0; j<s[0].length; j++) {
-                    if(s[i][j]) g[r+i][c+j] = v;
-                }
-            }
+            for(let i=0; i<s.length; i++) for(let j=0; j<s[0].length; j++) if(s[i][j]) g[r+i][c+j] = v;
         }
         
-        // 根據積木特徵分配外觀
         function getKey(s) {
-            let area = 0; 
-            s.flat().forEach(v => area += v);
-            
-            // 大面積 (6格) -> 遊戲機或方塊
+            let area = 0; s.flat().forEach(v => area += v);
             if (area >= 6) return Math.random() < 0.5 ? 'gameboy' : 'tetris';
-            // 中面積 (5格) -> 耳機或書本
             if (area === 5) return Math.random() < 0.5 ? 'headphones' : 'book';
-            // 小面積 (1格) -> 橡皮擦
             if (area === 1) return 'eraser';
-            // 長條型 -> 尺
             if (s.length === 1 || s[0].length === 1) return area >= 3 ? 'ruler' : 'pencil_box';
-            
-            // 判斷是否為矩形
-            let isRect = true; 
-            for(let row of s) if(row.includes(0)) isRect = false;
-            
+            let isRect = true; for(let row of s) if(row.includes(0)) isRect = false;
             if(isRect) return area >= 4 ? (Math.random() > 0.5 ? 'book' : 'notebook') : 'tetris';
-            
-            return 'tetris'; // 預設
+            return 'tetris';
         }
 
-        // --- 8. 互動與邏輯 ---
-        
-        // 碰撞檢測
         function checkColl(item, tx, ty) {
-            // 1. 邊界檢查
-            for(let r=0; r<item.rows; r++) {
-                for(let c=0; c<item.cols; c++) {
-                    if(item.shape[r][c]) {
-                        let gx = tx+c, gy = ty+r;
-                        if(gx < 0 || gx >= COLS_BACKPACK || gy < 0 || gy >= ROWS_BACKPACK) return true;
-                    }
-                }
+            for(let r=0; r<item.rows; r++) for(let c=0; c<item.cols; c++) if(item.shape[r][c]) {
+                let gx = tx+c, gy = ty+r;
+                if(gx < 0 || gx >= COLS_BACKPACK || gy < 0 || gy >= ROWS_BACKPACK) return true;
             }
-            // 2. 重疊檢查
             for(let o of items) {
                 if(o === item || !o.isInside) continue;
                 let ox = Math.round(o.logicalX), oy = Math.round(o.logicalY);
-                for(let r=0; r<item.rows; r++) {
-                    for(let c=0; c<item.cols; c++) {
-                        if(item.shape[r][c]) {
-                            let rx = (tx+c)-ox, ry = (ty+r)-oy;
-                            if(rx >= 0 && rx < o.cols && ry >= 0 && ry < o.rows && o.shape[ry][rx]) return true;
-                        }
-                    }
+                for(let r=0; r<item.rows; r++) for(let c=0; c<item.cols; c++) if(item.shape[r][c]) {
+                    let rx = (tx+c)-ox, ry = (ty+r)-oy;
+                    if(rx >= 0 && rx < o.cols && ry >= 0 && ry < o.rows && o.shape[ry][rx]) return true;
                 }
             }
             return false;
         }
 
-        // 放置判定
         function onDrop(item, cx, cy) {
-            if(checkColl(item, cx, cy)) {
-                returnBounce(item, "⛔ 位置不合法"); 
-                return;
-            }
-            
-            // 解鎖機制
+            if(checkColl(item, cx, cy)) { returnBounce(item, "⛔ 位置不合法"); return; }
             if(unlockStatus[item.key] > 0) {
-                unlockStatus[item.key]--;
-                place(item, cx, cy);
+                unlockStatus[item.key]--; place(item, cx, cy);
                 uiFeedback.innerText = `✅ 放置成功！(剩餘次數: ${unlockStatus[item.key]})`;
-            } else {
-                askMath(item, cx, cy);
-            }
+            } else { askMath(item, cx, cy); }
         }
 
-        // 顯示題目
         function askMath(item, cx, cy) {
-            pendingItem = item; 
-            pendingCol = cx; 
-            pendingRow = cy;
-            
-            quizText.innerHTML = `
-                積木佔了 <b style="color:#d81b60">${item.area}</b> 格<br>
-                每格邊長：<b style="color:#0277bd">${UNIT_LENGTH}</b><br>
-                總面積是多少？
-            `;
-            quizInput.value = ""; 
-            modal.style.display = "flex"; 
-            quizInput.focus();
+            pendingItem = item; pendingCol = cx; pendingRow = cy;
+            quizText.innerHTML = `積木佔了 <b style="color:#d81b60">${item.area}</b> 格<br>每格邊長：<b style="color:#0277bd">${UNIT_LENGTH}</b><br>總面積是多少？`;
+            quizInput.value = ""; modal.style.display = "flex"; quizInput.focus();
         }
 
-        // 送出答案
         quizSubmit.onclick = () => {
             let ans = parseInt(quizInput.value);
             let correct = pendingItem.area * (UNIT_LENGTH * UNIT_LENGTH);
             modal.style.display = "none";
-            
             if(ans === correct) {
-                unlockStatus[pendingItem.key] = 2; // 獎勵3次 (1+2)
-                place(pendingItem, pendingCol, pendingRow);
+                unlockStatus[pendingItem.key] = 2; place(pendingItem, pendingCol, pendingRow);
                 uiFeedback.innerText = "🎉 答對了！獎勵 3 次免費放置！";
-            } else {
-                returnBounce(pendingItem, "❌ 答案錯誤！積木彈回");
-            }
+            } else { returnBounce(pendingItem, "❌ 答案錯誤！積木彈回"); }
         }
 
-        function place(item, x, y) {
-            item.logicalX = x; 
-            item.logicalY = y; 
-            item.isInside = true;
-            if(navigator.vibrate) navigator.vibrate(30);
-            updateUI(); 
-            draw();
-        }
-        
-        function returnBounce(item, msg) {
-            item.logicalX = originalPos.x; 
-            item.logicalY = originalPos.y; 
-            item.isInside = false;
-            uiFeedback.innerText = msg; 
-            uiFeedback.style.color = "#d32f2f";
-            draw();
-        }
-        
-        function updateUI() {
-            let used = 0; 
-            items.forEach(i => { if(i.isInside) used += i.area; });
-            uiCoverage.innerText = Math.round(used / (ROWS_BACKPACK * COLS_BACKPACK) * 100) + "%";
-        }
+        function place(item, x, y) { item.logicalX = x; item.logicalY = y; item.isInside = true; if(navigator.vibrate) navigator.vibrate(30); updateUI(); draw(); }
+        function returnBounce(item, msg) { item.logicalX = originalPos.x; item.logicalY = originalPos.y; item.isInside = false; uiFeedback.innerText = msg; uiFeedback.style.color = "#d32f2f"; draw(); }
+        function updateUI() { let used = 0; items.forEach(i => { if(i.isInside) used += i.area; }); uiCoverage.innerText = Math.round(used / (ROWS_BACKPACK * COLS_BACKPACK) * 100) + "%"; }
 
-        // --- 9. 繪圖主迴圈 ---
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 背包區
-            ctx.fillStyle = "white"; 
-            ctx.fillRect(OFFSET_X, OFFSET_Y, BACKPACK_W, BACKPACK_H);
-            
+            ctx.fillStyle = "white"; ctx.fillRect(OFFSET_X, OFFSET_Y, BACKPACK_W, BACKPACK_H);
             ctx.strokeStyle = "#eee"; ctx.lineWidth = 1; ctx.beginPath();
-            for(let i=0; i<=COLS_BACKPACK; i++) { 
-                ctx.moveTo(OFFSET_X+i*GRID_SIZE, OFFSET_Y); 
-                ctx.lineTo(OFFSET_X+i*GRID_SIZE, OFFSET_Y+BACKPACK_H); 
-            }
-            for(let i=0; i<=ROWS_BACKPACK; i++) { 
-                ctx.moveTo(OFFSET_X, OFFSET_Y+i*GRID_SIZE); 
-                ctx.lineTo(OFFSET_X+BACKPACK_W, OFFSET_Y+i*GRID_SIZE); 
-            }
+            for(let i=0; i<=COLS_BACKPACK; i++) { ctx.moveTo(OFFSET_X+i*GRID_SIZE, OFFSET_Y); ctx.lineTo(OFFSET_X+i*GRID_SIZE, OFFSET_Y+BACKPACK_H); }
+            for(let i=0; i<=ROWS_BACKPACK; i++) { ctx.moveTo(OFFSET_X, OFFSET_Y+i*GRID_SIZE); ctx.lineTo(OFFSET_X+BACKPACK_W, OFFSET_Y+i*GRID_SIZE); }
             ctx.stroke();
-            
-            ctx.strokeStyle = "#795548"; ctx.lineWidth = 3; 
-            ctx.strokeRect(OFFSET_X, OFFSET_Y, BACKPACK_W, BACKPACK_H);
-
-            // 物品
+            ctx.strokeStyle = "#795548"; ctx.lineWidth = 3; ctx.strokeRect(OFFSET_X, OFFSET_Y, BACKPACK_W, BACKPACK_H);
             items.forEach(i => { if(i !== draggedItem) i.draw(ctx); });
-            
-            if(draggedItem) { 
-                ctx.save(); 
-                ctx.globalAlpha = 0.8; 
-                ctx.shadowBlur = 10; 
-                ctx.shadowColor = "black"; 
-                draggedItem.draw(ctx); 
-                ctx.restore(); 
-            }
+            if(draggedItem) { ctx.save(); ctx.globalAlpha = 0.8; ctx.shadowBlur = 10; ctx.shadowColor = "black"; draggedItem.draw(ctx); ctx.restore(); }
         }
 
-        // --- 10. 事件處理 ---
-        function getPos(e) {
-            const r = canvas.getBoundingClientRect();
-            const cx = e.touches ? e.touches[0].clientX : e.clientX;
-            const cy = e.touches ? e.touches[0].clientY : e.clientY;
-            return {x: cx - r.left, y: cy - r.top};
-        }
-
+        function getPos(e) { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return {x: cx - r.left, y: cy - r.top}; }
         function start(e) {
             if(e.type === 'touchstart') e.preventDefault();
-            const {x, y} = getPos(e);
-            const now = Date.now();
-            
+            const {x, y} = getPos(e); const now = Date.now();
             for(let i=items.length-1; i>=0; i--) {
                 if(items[i].hitTest(x, y)) {
-                    if(now - lastClickTime < 300) { 
-                        items[i].rotate(); 
-                        draw(); 
-                        lastClickTime = 0; 
-                        return; 
-                    }
-                    lastClickTime = now;
-                    
-                    draggedItem = items[i]; 
-                    originalPos = {x: draggedItem.logicalX, y: draggedItem.logicalY};
+                    if(now - lastClickTime < 300) { items[i].rotate(); draw(); lastClickTime = 0; return; }
+                    lastClickTime = now; draggedItem = items[i]; originalPos = {x: draggedItem.logicalX, y: draggedItem.logicalY};
                     dragOffsetGridX = (x / GRID_SIZE) - draggedItem.logicalX - (OFFSET_X / GRID_SIZE);
                     dragOffsetGridY = (y / GRID_SIZE) - draggedItem.logicalY - (OFFSET_Y / GRID_SIZE);
-                    
-                    items.splice(i, 1); 
-                    items.push(draggedItem);
-                    draw(); 
-                    return;
+                    items.splice(i, 1); items.push(draggedItem); draw(); return;
                 }
             }
         }
-
         function move(e) {
-            if(!draggedItem) return;
-            if(e.type === 'touchmove') e.preventDefault();
+            if(!draggedItem) return; if(e.type === 'touchmove') e.preventDefault();
             const {x, y} = getPos(e);
-            
             draggedItem.logicalX = (x / GRID_SIZE) - dragOffsetGridX - (OFFSET_X / GRID_SIZE);
             draggedItem.logicalY = (y / GRID_SIZE) - dragOffsetGridY - (OFFSET_Y / GRID_SIZE);
             draw();
         }
-
         function end(e) {
             if(!draggedItem) return;
-            let cx = Math.round(draggedItem.logicalX);
-            let cy = Math.round(draggedItem.logicalY);
-            
-            if(cx < COLS_BACKPACK) {
-                onDrop(draggedItem, cx, cy);
-            } else { 
-                draggedItem.logicalX = cx; 
-                draggedItem.logicalY = cy; 
-                draw(); 
-            }
+            let cx = Math.round(draggedItem.logicalX); let cy = Math.round(draggedItem.logicalY);
+            if(cx < COLS_BACKPACK) onDrop(draggedItem, cx, cy); else { draggedItem.logicalX = cx; draggedItem.logicalY = cy; draw(); }
             draggedItem = null;
         }
 
-        canvas.addEventListener('mousedown', start); 
-        document.addEventListener('mousemove', move); 
-        document.addEventListener('mouseup', end);
-        
-        canvas.addEventListener('touchstart', start, {passive:false}); 
-        document.addEventListener('touchmove', move, {passive:false}); 
-        document.addEventListener('touchend', end);
-        
+        canvas.addEventListener('mousedown', start); document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
+        canvas.addEventListener('touchstart', start, {passive:false}); document.addEventListener('touchmove', move, {passive:false}); document.addEventListener('touchend', end);
         document.getElementById('btn-new').onclick = () => { initGame(); updateUI(); };
         window.onresize = resizeGame;
 
         initGame();
         setTimeout(resizeGame, 100);
-
     </script>
 </body>
 </html>
