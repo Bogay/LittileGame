@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五行寫字大戰：精準辨識版</title>
+    <title>五行寫字大戰：強力辨識最終版</title>
     
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-radical/cnchar.radical.min.js"></script>
@@ -119,7 +119,7 @@
             ⚠️ 只有 5 秒！寫完請停筆等待辨識
         </p>
         <div style="background: #444; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
-            [相剋規則]<br>
+            [正統相剋]<br>
             ⚔️ 金 剋 🌲 木<br>
             🌲 木 剋 ⛰️ 土<br>
             ⛰️ 土 剋 💧 水<br>
@@ -165,7 +165,7 @@
         <div class="timer-bar-container"><div class="timer-bar" id="timer-bar"></div></div>
         <div class="status-text" id="status-msg">準備...</div>
         <canvas id="can" width="320" height="280"></canvas>
-        <div style="font-size: 12px; color: #999; margin-top: 5px;">若是辨識失敗，請使用手動輸入</div>
+        <div style="font-size: 12px; color: #999; margin-top: 5px;">若是辨識卡住，請稍候或使用手動輸入</div>
 
         <div id="fallback-input-area">
             <h3 style="color:#333; margin:0;">辨識失敗</h3>
@@ -177,7 +177,7 @@
     </div>
 
     <script>
-        // 1. 遊戲資料 (傳統五行)
+        // 1. 遊戲資料
         const ELEMENTS = {
             'metal': { name: '金', color: 'metal', icon: '⚔️', strong: 'wood', weak: 'fire' },
             'wood':  { name: '木', color: 'wood',  icon: '🌲', strong: 'earth', weak: 'metal' },
@@ -186,16 +186,14 @@
             'fire':  { name: '火', color: 'fire',  icon: '🔥', strong: 'metal', weak: 'water' }
         };
 
-        // 部首表 (擴充)
         const RADICALS = {
-            'metal': ['金', '钅', '刀', '刂', '戈', '辛', '酉', '申', '匕', '皿'],
-            'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜', '未', '衣', '糸'],
-            'water': ['水', '氵', '雨', '鱼', '冫', '❄️', '川', '泉', '黑'],
-            'fire':  ['火', '灬', '日', '光', '赤', '丙', '丁', '心', '忄'],
-            'earth': ['土', '山', '石', '田', '阜', '阝', '瓦', '穴', '辰', '丑', '戌', '未']
+            'metal': ['金', '钅', '刀', '刂', '戈', '辛', '酉', '申', '匕', '皿', '錢', '銀', '銅', '鐵', '鋼', '錯'],
+            'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜', '未', '衣', '糸', '林', '森', '樹', '草', '花'],
+            'water': ['水', '氵', '雨', '鱼', '冫', '❄️', '川', '泉', '黑', '江', '河', '湖', '海', '冰', '淼'],
+            'fire':  ['火', '灬', '日', '光', '赤', '丙', '丁', '心', '忄', '炎', '焱', '熱', '爆', '烤'],
+            'earth': ['土', '山', '石', '田', '阜', '阝', '瓦', '穴', '辰', '丑', '戌', '未', '地', '圭', '垚']
         };
 
-        // 關卡：木(金剋) -> 土(木剋) -> 水(土剋) -> 火(水剋) -> 金(火剋)
         const LEVELS = [
             { attr: 'wood', name: '朽木妖', hp: 100, icon: '🧟' },    
             { attr: 'earth', name: '岩石怪', hp: 150, icon: '🗿' }, 
@@ -210,7 +208,7 @@
         let isPlayerTurn = false;
         let timerInterval;
 
-        // 2. 畫布設定 & 筆畫追蹤
+        // 2. 畫布設定 (回歸 Google API 格式: [ [x[], y[], []], ... ])
         const canvas = document.getElementById("can");
         const ctx = canvas.getContext("2d");
         const fallbackArea = document.getElementById('fallback-input-area');
@@ -270,42 +268,35 @@
             traces = [];
         }
 
-        // 3. 辨識核心 (使用 JSONP 技術 - 保證不卡頓)
-        function recognizeHandwriting(inkData) {
-            document.getElementById('status-msg').innerText = "辨識中...";
+        // 3. 辨識核心 (使用 Proxy - 這是你說最準的那個版本)
+        async function recognizeHandwriting(inkData) {
+            const googleUrl = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
+            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(googleUrl);
             
-            // 產生隨機 callback 名稱
-            const callbackName = 'jsonp_' + Date.now() + Math.floor(Math.random() * 10000);
-            
-            // 定義 callback
-            window[callbackName] = function(data) {
-                // 清理
-                delete window[callbackName];
-                document.body.removeChild(script);
+            const body = {
+                "options": "enable_pre_space",
+                "requests": [{
+                    "writing_guide": { "writing_area_width": canvas.width, "writing_area_height": canvas.height },
+                    "ink": inkData,
+                    "language": "zh_TW"
+                }]
+            };
 
-                if (data[0] === "SUCCESS" && data[1][0][1].length > 0) {
-                    handleAttackResult(data[1][0][1][0]); // 取第一個候選字
-                } else {
-                    handleAttackResult(null, "看不懂...");
+            try {
+                console.log("Sending request via Proxy...");
+                const response = await fetch(proxyUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                const json = await response.json();
+                if (json[0] === "SUCCESS" && json[1][0][1].length > 0) {
+                    return json[1][0][1][0];
                 }
-            };
-
-            const inkStr = JSON.stringify(inkData);
-            const script = document.createElement('script');
-            // Google 官方 JSONP 接口
-            script.src = `https://www.google.com/inputtools/request?itc=zh-t-i0-handwrit&app=hwr&ink=${inkStr}&jsonp=${callbackName}`;
-            
-            // 錯誤處理 (例如斷網)
-            script.onerror = function() {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                // 這裡不亂猜，直接請使用者手動輸入
-                document.getElementById('status-msg').innerText = "連線失敗，請手動輸入";
-                fallbackArea.style.display = 'block';
-                manualInput.focus();
-            };
-
-            document.body.appendChild(script);
+            } catch (e) {
+                console.error("API Error:", e);
+            }
+            return null;
         }
 
         // 4. 遊戲邏輯
@@ -326,7 +317,7 @@
         }
 
         function loadLevel(idx) {
-            if (idx >= LEVELS.length) { alert("🎉 恭喜！全關卡制霸！"); location.reload(); return; }
+            if (idx >= LEVELS.length) { alert("🎉 恭喜！五行大師！"); location.reload(); return; }
             const data = LEVELS[idx];
             enemyHp = data.hp; maxEnemyHp = data.hp;
             
@@ -358,9 +349,38 @@
                 if(isPlayerTurn) {
                     isPlayerTurn = false;
                     if(traces.length === 0) handleAttackResult(null, "時間到，沒寫字！");
-                    else recognizeHandwriting(traces); // 呼叫 JSONP
+                    else executeRecognition();
                 }
             }, 5000);
+        }
+
+        async function executeRecognition() {
+            document.getElementById('status-msg').innerText = "辨識中...";
+
+            // 這裡就是之前缺少的函式！現在補上了，超時會切換手動輸入
+            let failSafe = setTimeout(() => {
+                 console.log("Timeout -> Mock");
+                 mockRecognition(); 
+            }, 3000);
+
+            const char = await recognizeHandwriting(traces);
+            clearTimeout(failSafe);
+
+            if (char) {
+                handleAttackResult(char);
+            } else {
+                document.getElementById('status-msg').innerText = "看不懂...請補救";
+                fallbackArea.style.display = 'block';
+                manualInput.value = ''; manualInput.focus();
+            }
+        }
+
+        // ★★★ 補上遺失的函式，防止報錯 ★★★
+        function mockRecognition() {
+            document.getElementById('status-msg').innerText = "連線不穩，請手動輸入";
+            fallbackArea.style.display = 'block';
+            manualInput.value = ''; 
+            manualInput.focus();
         }
 
         function manualSubmit() {
@@ -371,34 +391,19 @@
             }
         }
 
-        // ★★★ 屬性精確判斷 (解決金是土的問題) ★★★
         function getAttrExact(char) {
-            // 1. 絕對優先：檢查是否為「五行本字」或相關字
-            // 金
-            if ('金銀鐵銅鋼'.includes(char)) return 'metal';
-            // 木
-            if ('木林森樹草'.includes(char)) return 'wood';
-            // 水
-            if ('水冰海江河雨'.includes(char)) return 'water';
-            // 火
-            if ('火炎焱熱光'.includes(char)) return 'fire';
-            // 土
-            if ('土石地山'.includes(char)) return 'earth';
-
-            // 2. 檢查部首表
+            // 1. 優先檢查字本身
             for (let key in RADICALS) {
                 if (RADICALS[key].includes(char)) return key;
             }
-            
-            // 3. 使用 cnchar 檢查部首
+            // 2. 再檢查部首
             if (typeof cnchar !== 'undefined' && cnchar.radical) {
                 let radical = cnchar.radical(char);
                 for (let key in RADICALS) {
                     if (RADICALS[key].includes(radical)) return key;
                 }
             }
-            
-            return 'none'; // 不亂歸類為土
+            return 'none';
         }
 
         function handleAttackResult(char, errorMsg) {
@@ -414,8 +419,8 @@
 
             let attr = getAttrExact(char);
             let enemyAttr = LEVELS[currentLevel].attr;
-            let attrName = (attr === 'none') ? '無' : ELEMENTS[attr].name;
 
+            let attrName = (attr === 'none') ? '無' : ELEMENTS[attr].name;
             document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${attrName}屬性)`;
             
             const pAttrDiv = document.getElementById('p-attr');
@@ -429,13 +434,12 @@
                 pAttrDiv.innerText = '?';
             }
 
-            // 傷害計算
             let multiplier = 1.0;
             if (attr !== 'none') {
                 if (ELEMENTS[attr].strong === enemyAttr) multiplier = 2.0; // 剋制
                 else if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5; // 被剋
             } else {
-                multiplier = 0.8; // 無屬性
+                multiplier = 0.8;
             }
 
             let damage = Math.ceil(strokesNum * 5 * multiplier);
