@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五行寫字大戰</title>
+    <title>五行寫字大戰(有bug版)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-radical/cnchar.radical.min.js"></script>
     
     <style>
         :root {
-            --metal: #b0bec5; --wood: #66bb6a; --water: #42a5f5;
+            --metal: #cfd8dc; --wood: #66bb6a; --water: #42a5f5;
             --fire: #ef5350; --earth: #8d6e63; --bg: #263238;
         }
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             background-color: var(--bg); color: white; margin: 0; padding: 0;
             height: 100vh; display: flex; flex-direction: column; align-items: center;
-            overflow: hidden; user-select: none; touch-action: none;
+            overflow: hidden; user-select: none; touch-action: none; /* 禁止頁面滑動 */
         }
 
+        /* 頂部相剋提示 */
         .cycle-bar {
             background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
             margin-top: 10px; font-size: 14px; color: #ddd; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
@@ -39,17 +40,16 @@
         }
         .fighter {
             display: flex; flex-direction: column; align-items: center;
-            width: 130px; position: relative; transition: transform 0.2s;
+            width: 120px; position: relative; transition: transform 0.2s;
         }
         .fighter-avatar { font-size: 80px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); }
         .hp-bar-box { width: 100%; height: 12px; background: #444; border-radius: 6px; overflow: hidden; margin-top: 5px; border: 2px solid #fff;}
         .hp-bar { height: 100%; background: #4caf50; width: 100%; transition: width 0.3s ease-out; }
-        .hp-text { font-size: 12px; margin-top: 2px; }
         
         .attr-icon {
-            position: absolute; top: 0; right: 0; width: 36px; height: 36px;
+            position: absolute; top: 0; right: 0; width: 32px; height: 32px;
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-size: 20px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 10px black;
+            font-size: 18px; font-weight: bold; border: 2px solid white; box-shadow: 0 0 10px black;
             z-index: 10;
         }
         .metal { background: var(--metal); color: #333; }
@@ -58,6 +58,7 @@
         .fire { background: var(--fire); color: #fff; }
         .earth { background: var(--earth); color: #fff; }
 
+        /* 手寫區 */
         .input-zone {
             width: 100%; max-width: 500px; background: #f5f5f5; border-radius: 25px 25px 0 0;
             padding: 15px; display: flex; flex-direction: column; align-items: center;
@@ -65,7 +66,7 @@
             box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
         .timer-bar-container {
-            width: 100%; height: 12px; background: #ddd; border-radius: 10px;
+            width: 100%; height: 10px; background: #ddd; border-radius: 10px;
             margin-bottom: 10px; overflow: hidden; border: 1px solid #ccc;
         }
         .timer-bar { height: 100%; background: #f44336; width: 100%; }
@@ -73,12 +74,22 @@
         canvas {
             border: 2px dashed #999; border-radius: 15px; cursor: crosshair;
             background-color: white;
+            /* 網格線 */
             background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
             background-size: 50px 50px;
-            touch-action: none;
+            touch-action: none; /* 關鍵：解決 iPad 手寫時頁面捲動問題 */
         }
         .status-text { color: #333; font-weight: bold; margin-bottom: 8px; min-height: 24px; font-size: 18px; }
 
+        /* 備用輸入框 */
+        #fallback-input-area {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 15px; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 50; border: 4px solid #ff9800;
+        }
+        #manual-input { font-size: 28px; width: 100px; text-align: center; padding: 8px; margin: 10px 0; border: 2px solid #aaa; border-radius: 5px; }
+
+        /* 遮罩 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 200; display: flex;
@@ -99,14 +110,6 @@
             animation: floatUp 1s forwards; pointer-events: none; z-index: 100;
         }
         @keyframes floatUp { to { transform: translateY(-120px) scale(1.2); opacity: 0; } }
-        
-        #fallback-input-area {
-            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 20px; border-radius: 15px; text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 50; border: 4px solid #ff9800;
-        }
-        #manual-input { font-size: 28px; width: 100px; text-align: center; padding: 8px; margin: 10px 0; border: 2px solid #aaa; border-radius: 5px; }
-
     </style>
 </head>
 <body>
@@ -118,22 +121,22 @@
             ⚠️ 只有 5 秒！寫完請停筆等待辨識
         </p>
         <div style="background: #444; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
-            [相剋規則]<br>
-            ⚔️ 金 剋 🌲 木<br>
-            🌲 木 剋 ⛰️ 土<br>
-            ⛰️ 土 剋 💧 水<br>
+            [你的規則]<br>
             💧 水 剋 🔥 火<br>
-            🔥 火 剋 ⚔️ 金
+            🔥 火 剋 🌲 木<br>
+            🌲 木 剋 ⛰️ 土<br>
+            ⛰️ 土 剋 ⚔️ 金<br>
+            ⚔️ 金 剋 💧 水
         </div>
         <button class="btn-start" onclick="startGame()">開始挑戰</button>
     </div>
 
     <div class="cycle-bar">
-        <span class="cycle-item">⚔️金 &gt; 🌲木</span> | 
-        <span class="cycle-item">🌲木 &gt; ⛰️土</span> | 
-        <span class="cycle-item">⛰️土 &gt; 💧水</span> | 
         <span class="cycle-item">💧水 &gt; 🔥火</span> | 
-        <span class="cycle-item">🔥火 &gt; ⚔️金</span>
+        <span class="cycle-item">🔥火 &gt; 🌲木</span> | 
+        <span class="cycle-item">🌲木 &gt; ⛰️土</span> | 
+        <span class="cycle-item">⛰️土 &gt; ⚔️金</span> | 
+        <span class="cycle-item">⚔️金 &gt; 💧水</span>
     </div>
 
     <div class="top-bar">
@@ -146,47 +149,51 @@
             <div class="attr-icon" id="p-attr" style="display:none">?</div>
             <div class="fighter-avatar">🧙‍♂️</div>
             <div class="hp-bar-box"><div class="hp-bar" id="p-hp"></div></div>
-            <div class="hp-text" id="p-hp-text">100/100</div>
         </div>
         
-        <div style="font-size:40px; font-weight:900; color:rgba(255,255,255,0.1);">VS</div>
+        <div style="font-size:30px; font-weight:900; color:rgba(255,255,255,0.1);">VS</div>
 
         <div class="fighter">
             <div class="attr-icon" id="e-attr"></div>
             <div class="fighter-avatar" id="e-img">👹</div>
             <div class="hp-bar-box"><div class="hp-bar" id="e-hp"></div></div>
-            <div class="hp-text" id="e-hp-text">100/100</div>
+            <div style="margin-top:5px; font-size:14px" id="e-name"></div>
         </div>
     </div>
 
     <div class="input-zone">
-        <div class="timer-bar-container"><div class="timer-bar" id="timer-bar"></div></div>
+        <div class="timer-bar-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
         <div class="status-text" id="status-msg">準備...</div>
+        
         <canvas id="can" width="320" height="280"></canvas>
         <div style="font-size: 12px; color: #999; margin-top: 5px;">若是辨識卡住，請稍候或使用手動輸入</div>
 
         <div id="fallback-input-area">
             <h3 style="color:#333; margin:0;">辨識失敗</h3>
-            <p style="color:#666; font-size:14px; margin:5px 0;">請手動輸入：</p>
+            <p style="color:#666; font-size:14px; margin:5px 0;">AI 沒看懂，請你手動輸入：</p>
             <input type="text" id="manual-input" maxlength="1">
             <br><br>
-            <button onclick="manualSubmit()" style="font-size:16px; padding:8px 20px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">確認攻擊</button>
+            <button onclick="manualSubmit()" style="font-size:16px; padding:8px 25px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">發送攻擊</button>
         </div>
     </div>
 
     <script>
-        // 1. 遊戲資料設定
+        // --- 1. 遊戲資料設定 ---
         
-        // 修正為正統五行相剋：金>木>土>水>火>金
+        // 修正後的五行相剋 (依照使用者要求)
+        // 金剋水? (傳統是金生水，但為了循環這裡設為 金>水 以閉環，或者 金>木 傳統)
+        // 使用者要求：水>火, 火>木, 土>金. 缺少的：木>土, 金>水 (補齊五行循環)
         const ELEMENTS = {
-            'metal': { name: '金', color: 'metal', icon: '⚔️', weak: 'fire', strong: 'wood' },
-            'wood':  { name: '木', color: 'wood',  icon: '🌲', weak: 'metal', strong: 'earth' },
-            'water': { name: '水', color: 'water', icon: '💧', weak: 'earth', strong: 'fire' },
-            'fire':  { name: '火', color: 'fire',  icon: '🔥', weak: 'water', strong: 'metal' },
-            'earth': { name: '土', color: 'earth', icon: '⛰️', weak: 'wood',  strong: 'water' }
+            'metal': { name: '金', color: 'metal', icon: '⚔️', weak: 'earth', strong: 'water' },
+            'wood':  { name: '木', color: 'wood',  icon: '🌲', weak: 'fire',  strong: 'earth' },
+            'water': { name: '水', color: 'water', icon: '💧', weak: 'metal', strong: 'fire' }, // 水剋火
+            'fire':  { name: '火', color: 'fire',  icon: '🔥', weak: 'water', strong: 'wood' }, // 火剋木
+            'earth': { name: '土', color: 'earth', icon: '⛰️', weak: 'wood',  strong: 'metal' } // 土剋金
         };
 
-        // 部首表 (需擴充以涵蓋更多字)
+        // 部首歸類 (擴充版)
         const RADICALS = {
             'metal': ['金', '钅', '刀', '刂', '戈', '辛', '酉', '申'],
             'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜', '未'],
@@ -196,11 +203,11 @@
         };
 
         const LEVELS = [
-            { attr: 'wood', name: '朽木妖', hp: 100, icon: '🧟' },    // 金剋木
-            { attr: 'earth', name: '岩石巨像', hp: 150, icon: '🗿' }, // 木剋土
-            { attr: 'water', name: '深海蛟龍', hp: 200, icon: '🐉' }, // 土剋水
-            { attr: 'fire', name: '煉獄炎魔', hp: 250, icon: '👺' },  // 水剋火
-            { attr: 'metal', name: '黃金戰士', hp: 300, icon: '🤖' }  // 火剋金
+            { attr: 'fire', name: '烈焰怪', hp: 100, icon: '🔥' }, // 第一關打火，用水
+            { attr: 'wood', name: '樹妖', hp: 150, icon: '🌲' },   // 第二關打木，用火
+            { attr: 'metal', name: '鐵甲衛', hp: 200, icon: '🤖' }, // 第三關打金，用土
+            { attr: 'water', name: '深海龍', hp: 250, icon: '🐉' }, // 第四關打水，用金(或土?)
+            { attr: 'earth', name: '巨石魔', hp: 300, icon: '🗿' }  // 第五關打土，用木
         ];
 
         let currentLevel = 0;
@@ -209,7 +216,7 @@
         let isPlayerTurn = false;
         let timerInterval;
 
-        // 2. 畫布設定 & 筆畫追蹤
+        // --- 2. 畫布與筆跡 (Google API 格式) ---
         const canvas = document.getElementById("can");
         const ctx = canvas.getContext("2d");
         const fallbackArea = document.getElementById('fallback-input-area');
@@ -223,19 +230,25 @@
         let traces = []; 
         let currentX = [], currentY = [];
 
+        // 處理 Retina 螢幕座標偏移
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
+            // 處理 Touch 事件
             let clientX = e.clientX;
             let clientY = e.clientY;
             if(e.touches && e.touches.length > 0) {
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
             }
-            return {x: Math.round(clientX - rect.left), y: Math.round(clientY - rect.top)};
+            return {
+                x: Math.round(clientX - rect.left), 
+                y: Math.round(clientY - rect.top)
+            };
         }
 
         function startDraw(e) {
             if(!isPlayerTurn) return;
+            // e.preventDefault(); // 移除這裡的 preventDefault 以允許點擊輸入框，但在 css 設了 touch-action
             isDown = true;
             const {x, y} = getPos(e);
             lastPos = {x, y};
@@ -245,7 +258,7 @@
 
         function draw(e) {
             if (!isDown || !isPlayerTurn) return;
-            if(e.type === 'touchmove') e.preventDefault();
+            if(e.type === 'touchmove') e.preventDefault(); // 防止 iPad 拖動頁面
             const {x, y} = getPos(e);
             ctx.lineTo(x, y); ctx.stroke();
             lastPos = {x, y};
@@ -266,9 +279,11 @@
             traces = [];
         }
 
-        // 3. 辨識核心 (CORS Proxy)
+        // --- 3. 辨識核心 (Proxy Fix) ---
         async function recognizeHandwriting(inkData) {
+            // Google API URL
             const googleUrl = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
+            // 使用 CORS Proxy 繞過限制
             const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(googleUrl);
             
             const body = {
@@ -297,7 +312,7 @@
             return null;
         }
 
-        // 4. 遊戲流程
+        // --- 4. 遊戲流程 ---
 
         function startGame() {
             document.getElementById('overlay').style.display = 'none';
@@ -348,22 +363,24 @@
                 return;
             }
 
-            // 保險機制
+            // 啟動保險計時器，如果 Proxy 慢，3秒後顯示手動
             let failSafe = setTimeout(() => {
                  document.getElementById('status-msg').innerText = "網路不穩，請手動輸入";
                  fallbackArea.style.display = 'block';
-                 manualInput.value = ''; manualInput.focus();
+                 manualInput.value = '';
+                 manualInput.focus();
             }, 3000);
 
             const char = await recognizeHandwriting(traces);
-            clearTimeout(failSafe);
+            clearTimeout(failSafe); // 如果回來了就取消保險
 
             if (char) {
                 handleAttackResult(char);
             } else {
                 document.getElementById('status-msg').innerText = "看不懂...請補救";
                 fallbackArea.style.display = 'block';
-                manualInput.value = ''; manualInput.focus();
+                manualInput.value = '';
+                manualInput.focus();
             }
         }
 
@@ -383,23 +400,24 @@
                 return;
             }
 
+            // 屬性判定
             let strokesNum = cnchar.stroke(char);
             let radical = cnchar.radical(char);
             let attr = getAttrFromRadical(radical);
             let enemyAttr = LEVELS[currentLevel].attr;
 
-            document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${ELEMENTS[attr].name}屬性)`;
+            document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${ELEMENTS[attr].name})`;
             
             const pAttrDiv = document.getElementById('p-attr');
             pAttrDiv.style.display = 'flex';
             pAttrDiv.className = `attr-icon ${ELEMENTS[attr].color}`;
             pAttrDiv.innerText = ELEMENTS[attr].name;
 
-            // 傷害倍率計算
+            // 傷害公式
             let multiplier = 1.0;
             if (ELEMENTS[attr].strong === enemyAttr) multiplier = 2.0; // 剋制
-            else if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5; // 被剋
-            else if (attr === 'earth' && !RADICALS['earth'].includes(radical)) multiplier = 1.0; 
+            else if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5;   // 被剋
+            else if (attr === 'earth' && !RADICALS['earth'].includes(radical)) multiplier = 1.0; // 無屬性
 
             let damage = Math.ceil(strokesNum * 5 * multiplier);
             
@@ -424,12 +442,12 @@
             for(let key in RADICALS) {
                 if(RADICALS[key].includes(rad)) return key;
             }
-            return 'earth'; 
+            return 'earth'; // 預設
         }
 
         function enemyTurn() {
             document.getElementById('status-msg').innerText = "敵人攻擊中...";
-            let dmg = 15 + Math.floor(Math.random() * 15);
+            let dmg = 15 + Math.floor(Math.random() * 10);
             playerHp -= dmg;
             updateHpUI();
             
