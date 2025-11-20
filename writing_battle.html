@@ -3,32 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五行漢字大戰：完美辨識版</title>
+    <title>五行漢字大戰：代理修復版</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-radical/cnchar.radical.min.js"></script>
     
     <style>
         :root {
-            --metal: #b0bec5; --wood: #66bb6a; --water: #42a5f5;
+            --metal: #cfd8dc; --wood: #66bb6a; --water: #42a5f5;
             --fire: #ef5350; --earth: #8d6e63; --bg: #263238;
         }
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             background-color: var(--bg); color: white; margin: 0; padding: 0;
             height: 100vh; display: flex; flex-direction: column; align-items: center;
-            overflow: hidden; user-select: none; touch-action: none;
+            overflow: hidden; user-select: none; touch-action: none; /* 禁止頁面滑動 */
         }
 
-        /* 相剋提示表 */
+        /* 頂部相剋提示 */
         .cycle-bar {
             background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
-            margin-top: 10px; font-size: 14px; color: #ddd; display: flex; gap: 10px;
-            border: 1px solid #555;
+            margin-top: 10px; font-size: 14px; color: #ddd; display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
+            border: 1px solid #555; width: 90%;
         }
         .cycle-item b { color: #ffeb3b; }
 
         .top-bar {
-            width: 100%; padding: 10px 20px;
+            width: 100%; padding: 5px 20px;
             display: flex; justify-content: space-between; align-items: center;
             box-sizing: border-box; font-size: 18px; font-weight: bold;
         }
@@ -39,17 +40,16 @@
         }
         .fighter {
             display: flex; flex-direction: column; align-items: center;
-            width: 130px; position: relative; transition: transform 0.2s;
+            width: 120px; position: relative; transition: transform 0.2s;
         }
-        .fighter-avatar { font-size: 90px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); }
+        .fighter-avatar { font-size: 80px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.1)); }
         .hp-bar-box { width: 100%; height: 12px; background: #444; border-radius: 6px; overflow: hidden; margin-top: 5px; border: 2px solid #fff;}
         .hp-bar { height: 100%; background: #4caf50; width: 100%; transition: width 0.3s ease-out; }
-        .hp-text { font-size: 12px; margin-top: 2px; }
         
         .attr-icon {
-            position: absolute; top: 0; right: 0; width: 36px; height: 36px;
+            position: absolute; top: 0; right: 0; width: 32px; height: 32px;
             border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-size: 20px; font-weight: bold; border: 3px solid white; box-shadow: 0 0 10px black;
+            font-size: 18px; font-weight: bold; border: 2px solid white; box-shadow: 0 0 10px black;
             z-index: 10;
         }
         .metal { background: var(--metal); color: #333; }
@@ -66,7 +66,7 @@
             box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
         .timer-bar-container {
-            width: 100%; height: 12px; background: #ddd; border-radius: 10px;
+            width: 100%; height: 10px; background: #ddd; border-radius: 10px;
             margin-bottom: 10px; overflow: hidden; border: 1px solid #ccc;
         }
         .timer-bar { height: 100%; background: #f44336; width: 100%; }
@@ -74,20 +74,27 @@
         canvas {
             border: 2px dashed #999; border-radius: 15px; cursor: crosshair;
             background-color: white;
-            background-image: 
-                linear-gradient(#eee 1px, transparent 1px), 
-                linear-gradient(90deg, #eee 1px, transparent 1px);
+            /* 網格線 */
+            background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px);
             background-size: 50px 50px;
-            touch-action: none;
+            touch-action: none; /* 關鍵：解決 iPad 手寫時頁面捲動問題 */
         }
         .status-text { color: #333; font-weight: bold; margin-bottom: 8px; min-height: 24px; font-size: 18px; }
 
-        /* 彈窗與特效 */
+        /* 備用輸入框 */
+        #fallback-input-area {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 15px; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 50; border: 4px solid #ff9800;
+        }
+        #manual-input { font-size: 28px; width: 100px; text-align: center; padding: 8px; margin: 10px 0; border: 2px solid #aaa; border-radius: 5px; }
+
+        /* 遮罩 */
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 200; display: flex;
+            background: rgba(0,0,0,0.9); z-index: 200; display: flex;
             flex-direction: column; justify-content: center; align-items: center;
-            color: white; text-align: center;
+            color: white; text-align: center; padding: 20px;
         }
         .btn-start {
             padding: 15px 50px; font-size: 24px; background: #ff9800; color: white;
@@ -102,55 +109,39 @@
             color: #ffeb3b; text-shadow: 3px 3px 0 #d32f2f;
             animation: floatUp 1s forwards; pointer-events: none; z-index: 100;
         }
-        @keyframes floatUp { 
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-120px) scale(1); opacity: 0; } 
-        }
-
-        /* 備用輸入區 */
-        #fallback-input-area {
-            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 20px; border-radius: 15px; text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 50; border: 4px solid #ff9800;
-        }
-        #manual-input { font-size: 28px; width: 100px; text-align: center; padding: 8px; margin: 10px 0; }
+        @keyframes floatUp { to { transform: translateY(-120px) scale(1.2); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="overlay" id="overlay">
-        <h1 style="font-size: 40px; margin-bottom: 10px;">🔥 五行漢字大戰</h1>
+        <h1 style="margin-bottom: 10px;">🔥 五行漢字大戰</h1>
         <p style="font-size: 18px; color: #ccc; line-height: 1.6;">
             寫出<b>筆畫多</b>且<b>屬性相剋</b>的字<br>
-            打敗每一關的屬性怪獸！
+            ⚠️ 只有 5 秒！寫完請停筆等待辨識
         </p>
-        <div style="background: #333; padding: 15px; border-radius: 10px; margin-top: 20px;">
-            [相剋規則]<br>
-            ⚔️ 金 剋 🌲 木<br>
-            🌲 木 剋 ⛰️ 土<br>
-            ⛰️ 土 剋 💧 水<br>
+        <div style="background: #444; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
+            [你的規則]<br>
             💧 水 剋 🔥 火<br>
-            🔥 火 剋 ⚔️ 金
+            🔥 火 剋 🌲 木<br>
+            🌲 木 剋 ⛰️ 土<br>
+            ⛰️ 土 剋 ⚔️ 金<br>
+            ⚔️ 金 剋 💧 水
         </div>
         <button class="btn-start" onclick="startGame()">開始挑戰</button>
     </div>
 
     <div class="cycle-bar">
-        <span class="cycle-item">⚔️<b>金</b> 剋 🌲木</span>
-        <span>&gt;</span>
-        <span class="cycle-item">🌲<b>木</b> 剋 ⛰️土</span>
-        <span>&gt;</span>
-        <span class="cycle-item">⛰️<b>土</b> 剋 💧水</span>
-        <span>&gt;</span>
-        <span class="cycle-item">💧<b>水</b> 剋 🔥火</span>
-        <span>&gt;</span>
-        <span class="cycle-item">🔥<b>火</b> 剋 ⚔️金</span>
+        <span class="cycle-item">💧水 &gt; 🔥火</span> | 
+        <span class="cycle-item">🔥火 &gt; 🌲木</span> | 
+        <span class="cycle-item">🌲木 &gt; ⛰️土</span> | 
+        <span class="cycle-item">⛰️土 &gt; ⚔️金</span> | 
+        <span class="cycle-item">⚔️金 &gt; 💧水</span>
     </div>
 
     <div class="top-bar">
         <span id="stage-num">關卡: 1</span>
-        <span id="level-name" style="color:#ffcc80"></span>
+        <span id="score">HP: 100</span>
     </div>
 
     <div class="battle-stage">
@@ -158,16 +149,15 @@
             <div class="attr-icon" id="p-attr" style="display:none">?</div>
             <div class="fighter-avatar">🧙‍♂️</div>
             <div class="hp-bar-box"><div class="hp-bar" id="p-hp"></div></div>
-            <div class="hp-text" id="p-hp-text">100/100</div>
         </div>
         
-        <div style="font-size:40px; font-weight:900; color:rgba(255,255,255,0.1); font-style:italic;">VS</div>
+        <div style="font-size:30px; font-weight:900; color:rgba(255,255,255,0.1);">VS</div>
 
         <div class="fighter">
             <div class="attr-icon" id="e-attr"></div>
             <div class="fighter-avatar" id="e-img">👹</div>
             <div class="hp-bar-box"><div class="hp-bar" id="e-hp"></div></div>
-            <div class="hp-text" id="e-hp-text">100/100</div>
+            <div style="margin-top:5px; font-size:14px" id="e-name"></div>
         </div>
     </div>
 
@@ -178,72 +168,87 @@
         <div class="status-text" id="status-msg">準備...</div>
         
         <canvas id="can" width="320" height="280"></canvas>
-        
+        <div style="font-size: 12px; color: #999; margin-top: 5px;">若是辨識卡住，請稍候或使用手動輸入</div>
+
         <div id="fallback-input-area">
             <h3 style="color:#333; margin:0;">辨識失敗</h3>
-            <p style="color:#666; font-size:14px; margin:5px 0;">請手動輸入：</p>
+            <p style="color:#666; font-size:14px; margin:5px 0;">AI 沒看懂，請你手動輸入：</p>
             <input type="text" id="manual-input" maxlength="1">
-            <br>
-            <button onclick="manualSubmit()" style="font-size:16px; padding:8px 20px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">確認攻擊</button>
+            <br><br>
+            <button onclick="manualSubmit()" style="font-size:16px; padding:8px 25px; background:#4caf50; color:white; border:none; border-radius:5px; cursor:pointer;">發送攻擊</button>
         </div>
     </div>
 
     <script>
-        // --- 1. 遊戲資料 (傳統五行) ---
+        // --- 1. 遊戲資料設定 ---
+        
+        // 修正後的五行相剋 (依照使用者要求)
+        // 金剋水? (傳統是金生水，但為了循環這裡設為 金>水 以閉環，或者 金>木 傳統)
+        // 使用者要求：水>火, 火>木, 土>金. 缺少的：木>土, 金>水 (補齊五行循環)
         const ELEMENTS = {
-            'metal': { name: '金', color: 'metal', icon: '⚔️', weak: 'fire', strong: 'wood' },
-            'wood':  { name: '木', color: 'wood',  icon: '🌲', weak: 'metal', strong: 'earth' },
-            'water': { name: '水', color: 'water', icon: '💧', weak: 'earth', strong: 'fire' },
-            'fire':  { name: '火', color: 'fire',  icon: '🔥', weak: 'water', strong: 'metal' },
-            'earth': { name: '土', color: 'earth', icon: '⛰️', weak: 'wood',  strong: 'water' }
+            'metal': { name: '金', color: 'metal', icon: '⚔️', weak: 'earth', strong: 'water' },
+            'wood':  { name: '木', color: 'wood',  icon: '🌲', weak: 'fire',  strong: 'earth' },
+            'water': { name: '水', color: 'water', icon: '💧', weak: 'metal', strong: 'fire' }, // 水剋火
+            'fire':  { name: '火', color: 'fire',  icon: '🔥', weak: 'water', strong: 'wood' }, // 火剋木
+            'earth': { name: '土', color: 'earth', icon: '⛰️', weak: 'wood',  strong: 'metal' } // 土剋金
         };
 
-        // 擴充部首表 (涵蓋更多常用字)
+        // 部首歸類 (擴充版)
         const RADICALS = {
             'metal': ['金', '钅', '刀', '刂', '戈', '辛', '酉', '申'],
-            'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜'],
-            'water': ['水', '氵', '雨', '鱼', '冫', '❄️', '川'],
-            'fire':  ['火', '灬', '日', '光', '赤'],
-            'earth': ['土', '山', '石', '田', '阜', '阝', '瓦', '穴']
+            'wood':  ['木', '艹', '竹', '禾', '米', '耒', '瓜', '未'],
+            'water': ['水', '氵', '雨', '鱼', '冫', '❄️', '川', '泉'],
+            'fire':  ['火', '灬', '日', '光', '赤', '丙'],
+            'earth': ['土', '山', '石', '田', '阜', '阝', '瓦', '穴', '辰']
         };
 
         const LEVELS = [
-            { attr: 'wood', name: '朽木妖', hp: 100, icon: '🧟' },
-            { attr: 'earth', name: '岩石巨像', hp: 150, icon: '🗿' },
-            { attr: 'water', name: '深海蛟龍', hp: 200, icon: '🐉' },
-            { attr: 'fire', name: '煉獄炎魔', hp: 250, icon: '👺' },
-            { attr: 'metal', name: '黃金戰士', hp: 300, icon: '🤖' }
+            { attr: 'fire', name: '烈焰怪', hp: 100, icon: '🔥' }, // 第一關打火，用水
+            { attr: 'wood', name: '樹妖', hp: 150, icon: '🌲' },   // 第二關打木，用火
+            { attr: 'metal', name: '鐵甲衛', hp: 200, icon: '🤖' }, // 第三關打金，用土
+            { attr: 'water', name: '深海龍', hp: 250, icon: '🐉' }, // 第四關打水，用金(或土?)
+            { attr: 'earth', name: '巨石魔', hp: 300, icon: '🗿' }  // 第五關打土，用木
         ];
 
         let currentLevel = 0;
         let playerHp = 100, maxPlayerHp = 100;
         let enemyHp = 100, maxEnemyHp = 100;
         let isPlayerTurn = false;
-        let timerInterval, timeLeft = 5000;
+        let timerInterval;
 
-        // --- 2. 畫布與筆跡追蹤 (Google API 格式) ---
+        // --- 2. 畫布與筆跡 (Google API 格式) ---
         const canvas = document.getElementById("can");
         const ctx = canvas.getContext("2d");
         const fallbackArea = document.getElementById('fallback-input-area');
         const manualInput = document.getElementById('manual-input');
 
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 10;
         ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.strokeStyle = "#333";
 
         let isDown = false;
         let lastPos = {x:0, y:0};
-        let traces = []; // Google API 格式: [ [x[], y[], []], ... ]
+        let traces = []; 
         let currentX = [], currentY = [];
 
+        // 處理 Retina 螢幕座標偏移
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            const cx = e.touches ? e.touches[0].clientX : e.clientX;
-            const cy = e.touches ? e.touches[0].clientY : e.clientY;
-            return {x: Math.round(cx - rect.left), y: Math.round(cy - rect.top)};
+            // 處理 Touch 事件
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if(e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            return {
+                x: Math.round(clientX - rect.left), 
+                y: Math.round(clientY - rect.top)
+            };
         }
 
         function startDraw(e) {
             if(!isPlayerTurn) return;
+            // e.preventDefault(); // 移除這裡的 preventDefault 以允許點擊輸入框，但在 css 設了 touch-action
             isDown = true;
             const {x, y} = getPos(e);
             lastPos = {x, y};
@@ -253,7 +258,7 @@
 
         function draw(e) {
             if (!isDown || !isPlayerTurn) return;
-            e.preventDefault();
+            if(e.type === 'touchmove') e.preventDefault(); // 防止 iPad 拖動頁面
             const {x, y} = getPos(e);
             ctx.lineTo(x, y); ctx.stroke();
             lastPos = {x, y};
@@ -274,10 +279,13 @@
             traces = [];
         }
 
-        // --- 3. 強力辨識 (Google Input Tools API) ---
-        // 這是最關鍵的修復：直接用 fetch 呼叫 Google，避開第三方庫的錯誤
+        // --- 3. 辨識核心 (Proxy Fix) ---
         async function recognizeHandwriting(inkData) {
-            const url = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
+            // Google API URL
+            const googleUrl = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
+            // 使用 CORS Proxy 繞過限制
+            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(googleUrl);
+            
             const body = {
                 "options": "enable_pre_space",
                 "requests": [{
@@ -288,23 +296,23 @@
             };
 
             try {
-                const response = await fetch(url, {
+                console.log("Sending request via Proxy...");
+                const response = await fetch(proxyUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
                 });
                 const json = await response.json();
-                // 成功結構: [ "SUCCESS", [ [ "候選字1", "候選字2"... ] ] ]
                 if (json[0] === "SUCCESS" && json[1][0][1].length > 0) {
-                    return json[1][0][1][0]; // 回傳第一個字
+                    return json[1][0][1][0];
                 }
             } catch (e) {
-                console.error("API Error", e);
+                console.error("API Error:", e);
             }
             return null;
         }
 
-        // --- 4. 遊戲邏輯 ---
+        // --- 4. 遊戲流程 ---
 
         function startGame() {
             document.getElementById('overlay').style.display = 'none';
@@ -313,14 +321,11 @@
         }
 
         function loadLevel(idx) {
-            if (idx >= LEVELS.length) { alert("🎉 恭喜！你已成為五行大師！"); location.reload(); return; }
+            if (idx >= LEVELS.length) { alert("🎉 恭喜！全關卡制霸！"); location.reload(); return; }
             const data = LEVELS[idx];
             enemyHp = data.hp; maxEnemyHp = data.hp;
             
-            document.getElementById('stage-num').innerText = `關卡 ${idx+1}/5`;
-            document.getElementById('level-name').innerText = data.name;
-            
-            // 敵人 UI
+            document.getElementById('stage-num').innerText = `關卡 ${idx+1}`;
             document.getElementById('e-name').innerText = data.name;
             document.getElementById('e-img').innerText = data.icon;
             const el = ELEMENTS[data.attr];
@@ -338,7 +343,6 @@
             document.getElementById('status-msg').innerText = "5 秒倒數，請寫字！";
             document.getElementById('status-msg').style.color = "#333";
             
-            // 重啟計時條動畫
             const bar = document.getElementById('timer-bar');
             bar.style.transition = 'none'; bar.style.width = '100%';
             void bar.offsetWidth; 
@@ -359,14 +363,21 @@
                 return;
             }
 
-            // 呼叫 API
+            // 啟動保險計時器，如果 Proxy 慢，3秒後顯示手動
+            let failSafe = setTimeout(() => {
+                 document.getElementById('status-msg').innerText = "網路不穩，請手動輸入";
+                 fallbackArea.style.display = 'block';
+                 manualInput.value = '';
+                 manualInput.focus();
+            }, 3000);
+
             const char = await recognizeHandwriting(traces);
+            clearTimeout(failSafe); // 如果回來了就取消保險
 
             if (char) {
                 handleAttackResult(char);
             } else {
-                // 辨識失敗，切換手動
-                document.getElementById('status-msg').innerText = "看不懂...請手動輸入";
+                document.getElementById('status-msg').innerText = "看不懂...請補救";
                 fallbackArea.style.display = 'block';
                 manualInput.value = '';
                 manualInput.focus();
@@ -395,24 +406,20 @@
             let attr = getAttrFromRadical(radical);
             let enemyAttr = LEVELS[currentLevel].attr;
 
-            // 顯示結果
-            document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${ELEMENTS[attr].name}屬性)`;
+            document.getElementById('status-msg').innerText = `【${char}】${strokesNum}畫 (${ELEMENTS[attr].name})`;
             
-            // 玩家屬性圖示
             const pAttrDiv = document.getElementById('p-attr');
             pAttrDiv.style.display = 'flex';
             pAttrDiv.className = `attr-icon ${ELEMENTS[attr].color}`;
             pAttrDiv.innerText = ELEMENTS[attr].name;
 
-            // 計算傷害
+            // 傷害公式
             let multiplier = 1.0;
-            if (ELEMENTS[attr].strong === enemyAttr) multiplier = 2.0; // 剋制改為 2 倍，爽度高
-            if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5;   // 被剋
-            
-            // 沒對到部首，算普通攻擊
-            if (!RADICALS[attr]) multiplier = 0.8; 
+            if (ELEMENTS[attr].strong === enemyAttr) multiplier = 2.0; // 剋制
+            else if (ELEMENTS[attr].weak === enemyAttr) multiplier = 0.5;   // 被剋
+            else if (attr === 'earth' && !RADICALS['earth'].includes(radical)) multiplier = 1.0; // 無屬性
 
-            let damage = Math.ceil(strokesNum * 5 * multiplier); // 筆畫x5
+            let damage = Math.ceil(strokesNum * 5 * multiplier);
             
             setTimeout(() => {
                 enemyHp -= damage;
@@ -431,25 +438,21 @@
             }, 500);
         }
 
-        // 根據部首找屬性
         function getAttrFromRadical(rad) {
             for(let key in RADICALS) {
                 if(RADICALS[key].includes(rad)) return key;
             }
-            // 如果找不到，為了遊戲體驗，預設為土(普通)
-            return 'earth'; 
+            return 'earth'; // 預設
         }
 
         function enemyTurn() {
             document.getElementById('status-msg').innerText = "敵人攻擊中...";
-            let dmg = 15 + Math.floor(Math.random() * 15); // 15~30
+            let dmg = 15 + Math.floor(Math.random() * 10);
             playerHp -= dmg;
             updateHpUI();
             
-            // 震動
             document.body.style.transform = "translate(5px, 5px)";
             setTimeout(() => document.body.style.transform = "translate(0,0)", 100);
-            
             showDamage(dmg, 1.0, false);
 
             if(playerHp <= 0) {
@@ -465,24 +468,20 @@
             let pp = Math.max(0, (playerHp / maxPlayerHp) * 100);
             document.getElementById('e-hp').style.width = ep + "%";
             document.getElementById('p-hp').style.width = pp + "%";
-            
-            document.getElementById('p-hp-text').innerText = `${Math.max(0,playerHp)}/${maxPlayerHp}`;
-            document.getElementById('e-hp-text').innerText = `${Math.max(0,enemyHp)}/${maxEnemyHp}`;
+            document.getElementById('score').innerText = `HP: ${playerHp}`;
         }
 
         function showDamage(val, mult, isEnemyHurt) {
             const el = document.createElement('div');
             el.className = 'dmg-float';
             let prefix = "";
-            if(mult >= 2.0) { prefix = "效果絕佳! "; el.style.color = "#ff5252"; el.style.fontSize = "60px"; }
+            if(mult >= 2.0) { prefix = "效果絕佳! "; el.style.color = "#ff5252"; el.style.fontSize = "55px"; }
             else if(mult <= 0.5) { prefix = "效果不好.. "; el.style.color = "#ccc"; el.style.fontSize = "30px"; }
             else { el.style.color = "yellow"; }
-            
             el.innerText = `${prefix}${val}`;
             
-            if(isEnemyHurt) { el.style.top = "25%"; el.style.right = "20%"; } 
-            else { el.style.top = "25%"; el.style.left = "20%"; el.style.color = "red"; }
-            
+            if(isEnemyHurt) { el.style.top = "20%"; el.style.right = "20%"; } 
+            else { el.style.top = "20%"; el.style.left = "20%"; el.style.color = "red"; }
             document.body.appendChild(el);
             setTimeout(()=>el.remove(), 1000);
         }
