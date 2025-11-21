@@ -30,9 +30,24 @@ This game requires a Google Cloud Vision API key to function. Follow these steps
    - Copy your API key
 
 4. **Configure the Game**
+   
+   **Option 1: Direct edit (simple but less secure)**
    - Open `writing_battle.html` in a text editor
    - Find the line: `const apiKey = 'YOUR_API_KEY';`
    - Replace `'YOUR_API_KEY'` with your actual API key
+   
+   **Option 2: Configuration file (recommended)**
+   - Create a file named `config.js` in the same directory
+   - Add the following content:
+     ```javascript
+     const API_KEY = 'your-actual-api-key-here';
+     ```
+   - In `writing_battle.html`, replace the line `const apiKey = 'YOUR_API_KEY';` with:
+     ```javascript
+     const apiKey = typeof API_KEY !== 'undefined' ? API_KEY : 'YOUR_API_KEY';
+     ```
+   - Add `<script src="config.js"></script>` before the main script tag
+   - The `config.js` file is already in `.gitignore` and won't be committed to git
 
 ### Security Note
 

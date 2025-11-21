@@ -286,7 +286,7 @@
         }
 
         // 3. 辨識核心 (使用 Google Cloud Vision API)
-        async function recognizeHandwriting(inkData) {
+        async function recognizeHandwriting() {
             // Convert canvas to base64 image
             const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
             
@@ -415,7 +415,7 @@
                  mockRecognition(); 
             }, 3000);
 
-            const char = await recognizeHandwriting(traces);
+            const char = await recognizeHandwriting();
             clearTimeout(failSafe);
 
             if (char) {

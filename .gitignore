@@ -1,0 +1,18 @@
+# API Configuration
+# If you create a config.js file for your API key, add it here
+config.js
+api-config.js
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
