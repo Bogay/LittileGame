@@ -1,0 +1,12 @@
+# Wrangler configuration for local development
+# This file is optional but useful for testing locally
+
+name = "littile-game"
+compatibility_date = "2024-01-01"
+
+# Pages configuration
+pages_build_output_dir = "."
+
+# For local development, use .dev.vars file to set environment variables
+# Example .dev.vars content:
+# GOOGLE_CLOUD_VISION_API_KEY=your-api-key-here

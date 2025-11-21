@@ -8,12 +8,15 @@ A Chinese character handwriting recognition game that uses Google Cloud Vision A
 - Battle against enemies using the Five Elements (五行) system
 - Characters with more strokes deal more damage
 - Strategic gameplay based on element advantages
+- **Secure API key handling** with Cloudflare Pages Functions
 
-## Setup
+## Deployment
 
-### Google Cloud Vision API Configuration
+### Deploying to Cloudflare Pages
 
-This game requires a Google Cloud Vision API key to function. Follow these steps:
+This project is optimized for deployment on Cloudflare Pages with serverless functions to keep your API key secure.
+
+#### Prerequisites
 
 1. **Create a Google Cloud Project**
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
@@ -27,34 +30,74 @@ This game requires a Google Cloud Vision API key to function. Follow these steps
 3. **Create API Key**
    - Go to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "API Key"
+   - (Recommended) Restrict the API key to your domain
    - Copy your API key
 
-4. **Configure the Game**
+#### Deploy to Cloudflare Pages
+
+1. **Connect Your Repository**
+   - Go to [Cloudflare Pages](https://pages.cloudflare.com/)
+   - Click "Create a project"
+   - Connect your GitHub repository
+
+2. **Configure Build Settings**
+   - Framework preset: None
+   - Build command: (leave empty)
+   - Build output directory: `/`
+   - Root directory: (leave empty)
+
+3. **Set Environment Variable**
+   - In your Cloudflare Pages project settings
+   - Go to "Settings" > "Environment variables"
+   - Add a new variable:
+     - **Variable name**: `GOOGLE_CLOUD_VISION_API_KEY`
+     - **Value**: Your Google Cloud Vision API key
+   - Save the changes
+
+4. **Deploy**
+   - Click "Save and Deploy"
+   - Your site will be available at `https://your-project.pages.dev`
+
+#### Security Benefits
+
+✅ **API key is never exposed to the client**
+- The API key is stored securely in Cloudflare's environment variables
+- Client-side code only sends the canvas image to the serverless function
+- The serverless function handles all API communication with Google Cloud Vision
+
+✅ **No API key in source code**
+- Unlike the previous version, there's no need to edit HTML files with your API key
+- All sensitive credentials are managed through environment variables
+
+### Local Development (Optional)
+
+For local development with the old approach (not recommended for production):
    
-   **Option 1: Direct edit (simple but less secure)**
+### Local Development (Optional)
+
+For local development with the old approach (not recommended for production):
+
+1. **Option 1: Direct edit (simple but less secure)**
    - Open `writing_battle.html` in a text editor
-   - Find the line: `const apiKey = 'YOUR_API_KEY';`
-   - Replace `'YOUR_API_KEY'` with your actual API key
-   
-   **Option 2: Configuration file (recommended)**
-   - Create a file named `config.js` in the same directory
-   - Add the following content:
-     ```javascript
-     const API_KEY = 'your-actual-api-key-here';
+   - Find the `recognizeHandwriting()` function
+   - Modify it to call Google Cloud Vision API directly with your API key
+
+2. **Option 2: Use Cloudflare Pages locally with Wrangler**
+   - Install Wrangler CLI: `npm install -g wrangler`
+   - Create a `.dev.vars` file in the project root:
      ```
-   - In `writing_battle.html`, replace the line `const apiKey = 'YOUR_API_KEY';` with:
-     ```javascript
-     const apiKey = typeof API_KEY !== 'undefined' ? API_KEY : 'YOUR_API_KEY';
+     GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
      ```
-   - Add `<script src="config.js"></script>` before the main script tag
-   - The `config.js` file is already in `.gitignore` and won't be committed to git
+   - Run: `wrangler pages dev .`
+   - Open `http://localhost:8788` in your browser
+   - **Note**: Add `.dev.vars` to `.gitignore` to avoid committing it
 
 ### Security Note
 
-⚠️ **Important**: The API key in the HTML file is visible to anyone who views the page source. For production use, consider:
-- Setting up API key restrictions in Google Cloud Console (restrict to specific domains)
-- Using a backend proxy server to keep the API key secure
-- Implementing proper authentication and authorization
+⚠️ **Important**: When using Cloudflare Pages Functions, your API key is secure. However, you should still:
+- Set up API key restrictions in Google Cloud Console (restrict to specific domains)
+- Monitor your API usage regularly
+- Use Cloudflare's built-in DDoS protection
 
 ## How to Play
 

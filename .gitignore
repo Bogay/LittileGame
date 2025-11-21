@@ -3,6 +3,10 @@
 config.js
 api-config.js
 
+# Cloudflare local development
+.dev.vars
+.wrangler/
+
 # OS Files
 .DS_Store
 Thumbs.db
