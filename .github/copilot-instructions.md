@@ -1,5 +1,7 @@
 # Copilot Instructions for LittileGame
 
+> **Note**: "LittileGame" is the correct repository name (not a typo for "LittleGame")
+
 ## Project Overview
 LittileGame (五行寫字大戰 - Five Elements Writing Battle) is a Chinese character handwriting recognition game that uses Google Cloud Vision API for OCR. Players write Chinese characters and battle enemies using a Five Elements (五行) system based on traditional Chinese philosophy.
 
@@ -34,16 +36,16 @@ The entire game is contained in `writing_battle.html` with three main sections:
 
 ### JavaScript Code Organization
 The game logic in `writing_battle.html` is organized into distinct sections (marked with comments):
-1. **Configuration** (lines ~180-196): API key setup and security notes
-2. **Game Data** (lines ~197-221): 
+1. **Configuration**: API key setup and security notes
+2. **Game Data**: 
    - `ELEMENTS` object: Five Elements system (metal/金, wood/木, earth/土, water/水, fire/火)
    - `RADICALS` object: Character radicals mapped to elements
    - `LEVELS` array: Enemy configurations
-3. **Canvas Drawing** (lines ~228-287): Touch and mouse event handling
-4. **OCR Recognition** (lines ~288-360): Google Cloud Vision API integration
-5. **Character Analysis** (lines ~361-420): Stroke counting and element classification
-6. **Game State Management** (lines ~421-480): Turn system, HP, damage calculation
-7. **UI Updates** (lines ~481-559): Status messages, animations, victory/defeat
+3. **Canvas Drawing**: Touch and mouse event handling
+4. **OCR Recognition**: Google Cloud Vision API integration (`recognizeHandwriting()` function)
+5. **Character Analysis**: Stroke counting and element classification
+6. **Game State Management**: Turn system, HP, damage calculation
+7. **UI Updates**: Status messages, animations, victory/defeat
 
 ## Development Guidelines
 
@@ -70,7 +72,7 @@ When making changes to game mechanics:
 
 ### API Integration
 - **Google Cloud Vision API** is used for handwriting recognition
-- API key must be set in line ~296: `const apiKey = 'YOUR_API_KEY';`
+- API key must be set in the `recognizeHandwriting()` function: `const apiKey = 'YOUR_API_KEY';`
 - API request format: base64-encoded PNG image with DOCUMENT_TEXT_DETECTION
 - Language hints: `["zh-TW", "zh"]` for Traditional/Simplified Chinese
 
@@ -117,7 +119,7 @@ This project has no automated test suite. When making changes:
 ## Common Modification Scenarios
 
 ### Adding New Enemies
-Edit the `LEVELS` array around line 214:
+Edit the `LEVELS` constant array in the "Game Data" section:
 ```javascript
 { attr: 'element_name', name: '敵人名稱', hp: 100, icon: '🎭' }
 ```
@@ -131,7 +133,7 @@ Edit the `LEVELS` array around line 214:
 Update the `RADICALS` object (lines ~206-212) to change which character radicals map to which elements.
 
 ### UI Styling Changes
-All styles are in the `<style>` section (lines ~11-111):
+All styles are in the `<style>` section within the HTML file:
 - CSS custom properties in `:root` define element colors
 - Modify `.fighter`, `.input-zone`, or other classes for layout changes
 
