@@ -99,7 +99,7 @@ When modifying API code:
 1. Create a Google Cloud Project at https://console.cloud.google.com/
 2. Enable Cloud Vision API
 3. Create an API Key in "APIs & Services" > "Credentials"
-4. Replace `'YOUR_API_KEY'` in `writing_battle.html` line ~296
+4. Replace `'YOUR_API_KEY'` in the `recognizeHandwriting()` function in `writing_battle.html`
 5. (Recommended) Restrict API key to your domain in Google Cloud Console
 
 ### Local Testing
@@ -130,7 +130,7 @@ Edit the `LEVELS` constant array in the "Game Data" section:
 - Base HP values: Modify `LEVELS` array or `playerHp` initialization
 
 ### Modifying Element Classification
-Update the `RADICALS` object (lines ~206-212) to change which character radicals map to which elements.
+Update the `RADICALS` object in the "Game Data" section to change which character radicals map to which elements.
 
 ### UI Styling Changes
 All styles are in the `<style>` section within the HTML file:
