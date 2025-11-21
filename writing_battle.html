@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>五行寫字大戰：強力辨識最終版</title>
+    <title>五行寫字大戰：Google Cloud Vision API 版</title>
     
     <script src="https://cdn.jsdelivr.net/npm/cnchar/cnchar.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cnchar-radical/cnchar.radical.min.js"></script>
@@ -116,7 +116,8 @@
         <h1 style="margin-bottom: 10px;">🔥 五行寫字大戰</h1>
         <p style="font-size: 18px; color: #ccc; line-height: 1.6;">
             寫出<b>筆畫多</b>且<b>屬性相剋</b>的字<br>
-            ⚠️ 只有 5 秒！寫完請停筆等待辨識
+            ⚠️ 只有 5 秒！寫完請停筆等待辨識<br>
+            <small style="color: #ff9800;">使用 Google Cloud Vision API 進行辨識</small>
         </p>
         <div style="background: #444; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: left;">
             [正統相剋]<br>
@@ -177,6 +178,22 @@
     </div>
 
     <script>
+        // ⚙️ CONFIGURATION: Set your Google Cloud Vision API Key
+        // 
+        // To get an API key:
+        // 1. Go to https://console.cloud.google.com/
+        // 2. Create or select a project
+        // 3. Enable the Cloud Vision API
+        // 4. Create credentials (API Key)
+        // 5. (Optional but recommended) Restrict the API key to your domain
+        // 6. Find the line with "const apiKey = 'YOUR_API_KEY';" below (around line 288)
+        // 7. Replace 'YOUR_API_KEY' with your actual API key
+        //
+        // ⚠️ SECURITY NOTE: 
+        // The API key will be visible in the browser's page source.
+        // For production use, implement a backend proxy server to protect your API key.
+        // Set API key restrictions in Google Cloud Console to limit usage to your domain.
+        
         // 1. 遊戲資料
         const ELEMENTS = {
             'metal': { name: '金', color: 'metal', icon: '⚔️', strong: 'wood', weak: 'fire' },
@@ -268,33 +285,68 @@
             traces = [];
         }
 
-        // 3. 辨識核心 (使用 Proxy - 這是你說最準的那個版本)
-        async function recognizeHandwriting(inkData) {
-            const googleUrl = "https://inputtools.google.com/request?itc=zh-t-i0-handwrit&app=hwr";
-            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(googleUrl);
+        // 3. 辨識核心 (使用 Google Cloud Vision API)
+        async function recognizeHandwriting() {
+            // Convert canvas to base64 image
+            const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
             
-            const body = {
-                "options": "enable_pre_space",
+            // ⚠️ SECURITY WARNING: This API key is visible in the browser
+            // For production use, implement a backend proxy server to protect your API key
+            // Replace 'YOUR_API_KEY' with your actual API key
+            const apiKey = 'YOUR_API_KEY';
+            
+            // Check if API key is configured
+            if (apiKey === 'YOUR_API_KEY') {
+                console.error("API key not configured. Please set your Google Cloud Vision API key.");
+                document.getElementById('status-msg').innerText = "⚠️ 請先設定 API 金鑰";
+                document.getElementById('status-msg').style.color = "#ff9800";
+                return null;
+            }
+            
+            const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+            
+            const requestBody = {
                 "requests": [{
-                    "writing_guide": { "writing_area_width": canvas.width, "writing_area_height": canvas.height },
-                    "ink": inkData,
-                    "language": "zh_TW"
+                    "image": {
+                        "content": imageBase64
+                    },
+                    "features": [{
+                        "type": "DOCUMENT_TEXT_DETECTION",
+                        "maxResults": 1
+                    }],
+                    "imageContext": {
+                        "languageHints": ["zh-TW", "zh"]
+                    }
                 }]
             };
 
             try {
-                console.log("Sending request via Proxy...");
-                const response = await fetch(proxyUrl, {
+                console.log("Sending request to Google Cloud Vision API...");
+                const response = await fetch(visionUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(requestBody)
                 });
                 const json = await response.json();
-                if (json[0] === "SUCCESS" && json[1][0][1].length > 0) {
-                    return json[1][0][1][0];
+                
+                // Check for errors
+                if (json.error) {
+                    console.error("Vision API Error:", json.error);
+                    document.getElementById('status-msg').innerText = "❌ API 錯誤";
+                    document.getElementById('status-msg').style.color = "#f44336";
+                    return null;
+                }
+                
+                // Extract text from response
+                if (json.responses && json.responses[0] && json.responses[0].textAnnotations && json.responses[0].textAnnotations.length > 0) {
+                    const detectedText = json.responses[0].textAnnotations[0].description;
+                    // Return first character (in case multiple characters detected)
+                    return detectedText.trim().charAt(0);
                 }
             } catch (e) {
                 console.error("API Error:", e);
+                document.getElementById('status-msg').innerText = "❌ 網路連線失敗";
+                document.getElementById('status-msg').style.color = "#f44336";
             }
             return null;
         }
@@ -363,7 +415,7 @@
                  mockRecognition(); 
             }, 3000);
 
-            const char = await recognizeHandwriting(traces);
+            const char = await recognizeHandwriting();
             clearTimeout(failSafe);
 
             if (char) {
