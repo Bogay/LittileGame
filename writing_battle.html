@@ -178,21 +178,25 @@
     </div>
 
     <script>
-        // ⚙️ CONFIGURATION: Set your Google Cloud Vision API Key
+        // ⚙️ CONFIGURATION: Cloudflare Pages Deployment
         // 
-        // To get an API key:
+        // This game now uses Cloudflare Pages Functions to keep the API key secure.
+        // The API key is stored as an environment variable on the server side.
+        // 
+        // To deploy to Cloudflare Pages:
         // 1. Go to https://console.cloud.google.com/
         // 2. Create or select a project
         // 3. Enable the Cloud Vision API
         // 4. Create credentials (API Key)
         // 5. (Optional but recommended) Restrict the API key to your domain
-        // 6. Find the line with "const apiKey = 'YOUR_API_KEY';" below (around line 288)
-        // 7. Replace 'YOUR_API_KEY' with your actual API key
+        // 6. Deploy to Cloudflare Pages
+        // 7. In Cloudflare Pages settings, add environment variable:
+        //    Name: GOOGLE_CLOUD_VISION_API_KEY
+        //    Value: Your actual API key
         //
-        // ⚠️ SECURITY NOTE: 
-        // The API key will be visible in the browser's page source.
-        // For production use, implement a backend proxy server to protect your API key.
-        // Set API key restrictions in Google Cloud Console to limit usage to your domain.
+        // ✅ SECURITY: 
+        // The API key is now stored securely on the server side.
+        // Client-side code only sends the image to the serverless function.
         
         // 1. 遊戲資料
         const ELEMENTS = {
@@ -285,63 +289,36 @@
             traces = [];
         }
 
-        // 3. 辨識核心 (使用 Google Cloud Vision API)
+        // 3. 辨識核心 (使用 Cloudflare Pages Function)
         async function recognizeHandwriting() {
             // Convert canvas to base64 image
             const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
             
-            // ⚠️ SECURITY WARNING: This API key is visible in the browser
-            // For production use, implement a backend proxy server to protect your API key
-            // Replace 'YOUR_API_KEY' with your actual API key
-            const apiKey = 'YOUR_API_KEY';
-            
-            // Check if API key is configured
-            if (apiKey === 'YOUR_API_KEY') {
-                console.error("API key not configured. Please set your Google Cloud Vision API key.");
-                document.getElementById('status-msg').innerText = "⚠️ 請先設定 API 金鑰";
-                document.getElementById('status-msg').style.color = "#ff9800";
-                return null;
-            }
-            
-            const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
-            
-            const requestBody = {
-                "requests": [{
-                    "image": {
-                        "content": imageBase64
-                    },
-                    "features": [{
-                        "type": "DOCUMENT_TEXT_DETECTION",
-                        "maxResults": 1
-                    }],
-                    "imageContext": {
-                        "languageHints": ["zh-TW", "zh"]
-                    }
-                }]
-            };
+            // Call the serverless function instead of directly calling Google Cloud Vision API
+            // This keeps the API key secure on the server side
+            const apiUrl = '/api/recognize';
 
             try {
-                console.log("Sending request to Google Cloud Vision API...");
-                const response = await fetch(visionUrl, {
+                console.log("Sending request to serverless function...");
+                const response = await fetch(apiUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({ image: imageBase64 })
                 });
+                
                 const json = await response.json();
                 
                 // Check for errors
                 if (json.error) {
-                    console.error("Vision API Error:", json.error);
+                    console.error("API Error:", json.error);
                     document.getElementById('status-msg').innerText = "❌ API 錯誤";
                     document.getElementById('status-msg').style.color = "#f44336";
                     return null;
                 }
                 
-                // Extract text from response
-                if (json.responses && json.responses[0] && json.responses[0].textAnnotations && json.responses[0].textAnnotations.length > 0) {
-                    const detectedText = json.responses[0].textAnnotations[0].description;
-                    // Return first character (in case multiple characters detected)
-                    return detectedText.trim().charAt(0);
+                // Return the recognized text
+                if (json.success && json.text) {
+                    return json.text;
                 }
             } catch (e) {
                 console.error("API Error:", e);
