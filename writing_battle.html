@@ -178,13 +178,21 @@
     </div>
 
     <script>
-        // ⚙️ CONFIGURATION: Set your Google Cloud Vision API Key here
+        // ⚙️ CONFIGURATION: Set your Google Cloud Vision API Key
+        // 
         // To get an API key:
         // 1. Go to https://console.cloud.google.com/
         // 2. Create or select a project
         // 3. Enable the Cloud Vision API
         // 4. Create credentials (API Key)
-        // 5. Replace 'YOUR_API_KEY' below with your actual API key
+        // 5. (Optional but recommended) Restrict the API key to your domain
+        // 6. Find the line with "const apiKey = 'YOUR_API_KEY';" below (around line 288)
+        // 7. Replace 'YOUR_API_KEY' with your actual API key
+        //
+        // ⚠️ SECURITY NOTE: 
+        // The API key will be visible in the browser's page source.
+        // For production use, implement a backend proxy server to protect your API key.
+        // Set API key restrictions in Google Cloud Console to limit usage to your domain.
         
         // 1. 遊戲資料
         const ELEMENTS = {
@@ -282,9 +290,19 @@
             // Convert canvas to base64 image
             const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
             
-            // Google Cloud Vision API endpoint
-            // Note: Replace 'YOUR_API_KEY' with actual API key or use environment variable
-            const apiKey = 'YOUR_API_KEY'; // This should be configured by the user
+            // ⚠️ SECURITY WARNING: This API key is visible in the browser
+            // For production use, implement a backend proxy server to protect your API key
+            // Replace 'YOUR_API_KEY' with your actual API key
+            const apiKey = 'YOUR_API_KEY';
+            
+            // Check if API key is configured
+            if (apiKey === 'YOUR_API_KEY') {
+                console.error("API key not configured. Please set your Google Cloud Vision API key.");
+                document.getElementById('status-msg').innerText = "⚠️ 請先設定 API 金鑰";
+                document.getElementById('status-msg').style.color = "#ff9800";
+                return null;
+            }
+            
             const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
             
             const requestBody = {
@@ -314,6 +332,8 @@
                 // Check for errors
                 if (json.error) {
                     console.error("Vision API Error:", json.error);
+                    document.getElementById('status-msg').innerText = "❌ API 錯誤";
+                    document.getElementById('status-msg').style.color = "#f44336";
                     return null;
                 }
                 
@@ -325,6 +345,8 @@
                 }
             } catch (e) {
                 console.error("API Error:", e);
+                document.getElementById('status-msg').innerText = "❌ 網路連線失敗";
+                document.getElementById('status-msg').style.color = "#f44336";
             }
             return null;
         }
