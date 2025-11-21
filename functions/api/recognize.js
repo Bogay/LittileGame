@@ -99,7 +99,10 @@ export async function onRequestPost(context) {
         result.responses[0] && 
         result.responses[0].textAnnotations && 
         result.responses[0].textAnnotations.length > 0) {
-      recognizedText = result.responses[0].textAnnotations[0].description.trim().charAt(0);
+      const description = result.responses[0].textAnnotations[0].description;
+      if (description) {
+        recognizedText = description.trim().charAt(0);
+      }
     }
 
     // Return the result
