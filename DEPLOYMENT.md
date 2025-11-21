@@ -95,22 +95,57 @@ After setting the environment variable:
 
 To test locally with Cloudflare Pages Functions:
 
-1. Install Wrangler CLI:
+### Option 1: Using Nix (Recommended)
+
+If you have [Nix](https://nixos.org/) installed:
+
+1. **Enter the Nix development environment:**
+   
+   With Flakes:
    ```bash
-   npm install -g wrangler
+   nix develop
+   ```
+   
+   Or with traditional Nix:
+   ```bash
+   nix-shell
+   ```
+   
+   Or with direnv (automatic):
+   ```bash
+   direnv allow
    ```
 
-2. Create a `.dev.vars` file in the project root (copy from `.dev.vars.example`):
+2. **Create a `.dev.vars` file** (copy from `.dev.vars.example`):
    ```
    GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
    ```
 
-3. Run the local development server:
+3. **Run the local development server:**
    ```bash
    wrangler pages dev .
    ```
 
-4. Open `http://localhost:8788` in your browser
+4. **Open `http://localhost:8788` in your browser**
+
+### Option 2: Manual Setup
+
+1. **Install Wrangler CLI:**
+   ```bash
+   npm install -g wrangler
+   ```
+
+2. **Create a `.dev.vars` file** in the project root (copy from `.dev.vars.example`):
+   ```
+   GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
+   ```
+
+3. **Run the local development server:**
+   ```bash
+   wrangler pages dev .
+   ```
+
+4. **Open `http://localhost:8788` in your browser**
 
 **Note**: Make sure `.dev.vars` is in `.gitignore` to avoid committing your API key!
 

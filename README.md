@@ -10,6 +10,12 @@ A Chinese character handwriting recognition game that uses Google Cloud Vision A
 - Strategic gameplay based on element advantages
 - **Secure API key handling** with Cloudflare Pages Functions
 
+## Quick Start
+
+### For Development
+
+See [NIX_SETUP.md](NIX_SETUP.md) for instructions on setting up a development environment with Nix, or continue reading for manual setup and deployment instructions.
+
 ## Deployment
 
 ### Deploying to Cloudflare Pages
@@ -69,28 +75,56 @@ This project is optimized for deployment on Cloudflare Pages with serverless fun
 - Unlike the previous version, there's no need to edit HTML files with your API key
 - All sensitive credentials are managed through environment variables
 
-### Local Development (Optional)
+### Local Development
 
-For local development with the old approach (not recommended for production):
-   
-### Local Development (Optional)
+#### Option 1: Using Nix (Recommended)
 
-For local development with the old approach (not recommended for production):
+If you have [Nix](https://nixos.org/) installed, you can use the provided Nix configuration for a reproducible development environment:
 
-1. **Option 1: Direct edit (simple but less secure)**
-   - Open `writing_battle.html` in a text editor
-   - Find the `recognizeHandwriting()` function
-   - Modify it to call Google Cloud Vision API directly with your API key
+**With Nix Flakes (recommended):**
+```bash
+# Enter the development environment
+nix develop
 
-2. **Option 2: Use Cloudflare Pages locally with Wrangler**
-   - Install Wrangler CLI: `npm install -g wrangler`
-   - Create a `.dev.vars` file in the project root:
-     ```
-     GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
-     ```
-   - Run: `wrangler pages dev .`
-   - Open `http://localhost:8788` in your browser
-   - **Note**: Add `.dev.vars` to `.gitignore` to avoid committing it
+# Or use direnv for automatic environment loading
+echo "use flake" > .envrc
+direnv allow
+```
+
+**Without Flakes (traditional Nix):**
+```bash
+nix-shell
+```
+
+Once in the Nix environment:
+1. Copy `.dev.vars.example` to `.dev.vars`
+2. Add your Google Cloud Vision API key to `.dev.vars`:
+   ```
+   GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
+   ```
+3. Run: `wrangler pages dev .`
+4. Open `http://localhost:8788` in your browser
+
+#### Option 2: Manual Setup
+
+**Install Wrangler CLI:**
+```bash
+npm install -g wrangler
+```
+
+**Configure and run:**
+1. Create a `.dev.vars` file in the project root:
+   ```
+   GOOGLE_CLOUD_VISION_API_KEY=your-actual-api-key-here
+   ```
+2. Run: `wrangler pages dev .`
+3. Open `http://localhost:8788` in your browser
+4. **Note**: Add `.dev.vars` to `.gitignore` to avoid committing it
+
+#### Option 3: Direct edit (simple but not recommended for production)
+- Open `writing_battle.html` in a text editor
+- Find the `recognizeHandwriting()` function
+- Modify it to call Google Cloud Vision API directly with your API key
 
 ### Security Note
 
